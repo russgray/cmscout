@@ -9,6 +9,7 @@ type
   TCM4LangDB = class
   private
     FLangDB: string;
+    FLanguageID: Integer;
 
     FOnStatus: TStatusEvent;
     FOnProgress: TProgressEvent;
@@ -34,6 +35,7 @@ type
   public
     procedure Load(Clubs: TCM4ClubContainer; Competitions: TCM4CompetitionContainer; Nations: TCM4NationContainer);
     property LangDB: string read FLangDB write FLangDB;
+    property LanguageID: Integer read FLanguageID write FLanguageID;
     property OnStatus: TStatusEvent read FOnStatus write FOnStatus;
     property OnProgress: TProgressEvent read FOnProgress write FOnProgress;
   end;
@@ -50,7 +52,8 @@ var
   WordHeader: Word;
   StrHeader: array[1..3] of WideChar;
   DBVersion: Word;
-  Offset: Integer;
+  Count: Byte;
+  Offset, j, Lang, LangOff: Integer;
 begin
   try
     DataFile:=TCM4FileStream.Create(LangDB, fmOpenRead or fmShareDenyWrite);
@@ -64,12 +67,22 @@ begin
     DataFile.Read(WordHeader, 2);
     DataFile.Read(StrHeader, 6);
     DataFile.Read(DBVersion, 2);
-    DataFile.Skip(6);
+    DataFile.Skip(1);
 
     if (ByteHeader <> 0) or (WordHeader <> 46) or (StrHeader <> 'dat') or (DBVersion < 110) or (DBVersion > 200) then
       raise EFileCorruptError.Create('The lang_db.dat doesn''t seem to be a valid Language DB for CM4.');
 
-    DataFile.Read(Offset, 4);
+    DataFile.Read(Count, 1);
+    Offset:=161;
+
+    for j:=0 to Count - 1 do
+    begin
+      DataFile.Read(Lang, 4);
+      DataFile.Read(LangOff, 4);
+      if Lang = LanguageID then
+        Offset:=LangOff;
+    end;
+
     DataFile.Seek(Offset + 12, soFromBeginning);
 
     TriggerStatus('Skipping Cities');

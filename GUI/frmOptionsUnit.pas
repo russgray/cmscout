@@ -4,7 +4,7 @@ interface
 
 uses
   Forms, Dialogs, Controls, StdCtrls, CheckLst, Buttons,
-  ComCtrls, Classes, FileCtrl;
+  ComCtrls, Classes, FileCtrl, CM4ComboBox;
 
 type
   TfrmOptions = class(TForm)    
@@ -26,6 +26,8 @@ type
     btnLangDB: TBitBtn;
     cbDefaultColumns: TCheckBox;
     lbColumns: TCheckListBox;
+    cmbLanguage: TIntegerComboBox;
+    lblLanguage: TLabel;
     procedure btnGameDirClick(Sender: TObject);
     procedure btnSaveDirClick(Sender: TObject);
     procedure btnLangDBClick(Sender: TObject);
@@ -33,7 +35,7 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
   end;
 
 var
@@ -71,6 +73,22 @@ end;
 procedure TfrmOptions.cbDefaultColumnsClick(Sender: TObject);
 begin
   lbColumns.Enabled:=not cbDefaultColumns.Checked;
+end;
+
+constructor TfrmOptions.Create(AOwner: TComponent);
+begin
+  inherited;
+  cmbLanguage.AddInteger('English', 8);
+  cmbLanguage.AddInteger('Dutch', 7);
+  cmbLanguage.AddInteger('French', 10);
+  cmbLanguage.AddInteger('German', 11);
+  cmbLanguage.AddInteger('Italian', 15);
+  cmbLanguage.AddInteger('Polish', 18);
+  cmbLanguage.AddInteger('Portuguese', 19);
+  cmbLanguage.AddInteger('Norwegian', 22);
+  cmbLanguage.AddInteger('Spanish', 24);
+  cmbLanguage.AddInteger('Swedish', 30);
+  cmbLanguage.AddInteger('Danish', 32);
 end;
 
 end.

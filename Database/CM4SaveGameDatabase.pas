@@ -19,6 +19,7 @@ type
     FFilename: string;
     FLangDB: string;
     FLoadLangDB: Boolean;
+    FLanguageID: Integer;
 
     FDBVersion: SmallInt;
 
@@ -62,6 +63,7 @@ type
     property Filename: string read FFilename write FFilename;
     property LangDB: string read FLangDB write FLangDB;
     property LoadLangDB: Boolean read FLoadLangDB write FLoadLangDB;
+    property LanguageID: Integer read FLanguageID write FLanguageID;
 
     property DBVersion: SmallInt read FDBVersion;
 
@@ -205,6 +207,7 @@ begin
   begin
     LanguageDB:=TCM4LangDB.Create;
     LanguageDB.LangDB:=LangDB;
+    LanguageDB.LanguageID:=LanguageID;
     LanguageDB.OnStatus:=OnStatus;
     LanguageDB.OnProgress:=OnProgress;
 

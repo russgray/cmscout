@@ -65,6 +65,7 @@ type
     FSaveDir: string;
     FLangDB: string;
     FLoadLangDB: Boolean;
+    FLanguageID: Integer;
 
     procedure OnProgress(Progress: Integer);
     procedure OnStatus(Status: string);
@@ -91,6 +92,7 @@ var
   j: Integer;
 begin
   FLoadLangDB:=False;
+  FLanguageID:=8;
   
   CMReg:=TRegistry.Create;
 
@@ -104,6 +106,9 @@ begin
       if CMReg.ValueExists('LoadLangDB') then
         FLoadLangDB:=CMReg.ReadBool('LoadLangDB');
 
+      if CMReg.ValueExists('LanguageID') then
+        FLanguageID:=CMReg.ReadInteger('LanguageID');
+        
       if CMReg.ValueExists('WindowHeight') then
         Height:=CMReg.ReadInteger('WindowHeight');
       if CMReg.ValueExists('WindowWidth') then
@@ -204,6 +209,7 @@ begin
       CMReg.WriteString('SaveDir', FSaveDir);
       CMReg.WriteString('LangDB', FLangDB);
       CMReg.WriteBool('LoadLangDB', FLoadLangDB);
+      CMReg.WriteInteger('LanguageID', FLanguageID);
       CMReg.WriteInteger('WindowState', Integer(WindowState));
 
       if WindowState = wsMaximized then
@@ -265,6 +271,7 @@ begin
     
     FCMData.Filename:=diaLoadGame.FileName;
     FCMData.LoadLangDB:=FLoadLangDB;
+    FCMData.LanguageID:=FLanguageID;
     FCMData.LangDB:=FLangDB;
     
     frmMain.Update;
@@ -323,6 +330,7 @@ begin
   frmOptions.edGameDir.Text:=FGameDir;
   frmOptions.edSaveDir.Text:=FSaveDir;
   frmOptions.edLangDB.Text:=FLangDB;
+  frmOptions.cmbLanguage.SelectItem(FLanguageID);
   frmOptions.cbLoadLangDB.Checked:=FLoadLangDB;
 
   frmOptions.lbColumns.Clear;
@@ -336,6 +344,7 @@ begin
     FGameDir:=frmOptions.edGameDir.Text;
     FSaveDir:=frmOptions.edSaveDir.Text;
     FLangDB:=frmOptions.edLangDB.Text;
+    FLanguageID:=frmOptions.cmbLanguage.Selected;
     FLoadLangDB:=frmOptions.cbLoadLangDB.Checked;
 
     if frmOptions.cbDefaultColumns.Checked then

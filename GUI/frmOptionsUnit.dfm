@@ -27,42 +27,49 @@ object frmOptions: TfrmOptions
       Caption = '&General'
       object lblGameDir: TLabel
         Left = 8
-        Top = 73
+        Top = 65
         Width = 76
         Height = 13
         Caption = 'Game Directory:'
       end
       object lblSaveDir: TLabel
         Left = 8
-        Top = 97
+        Top = 89
         Width = 73
         Height = 13
         Caption = 'Save Directory:'
       end
       object lblLangDB: TLabel
         Left = 8
-        Top = 121
+        Top = 113
         Width = 100
         Height = 13
         Caption = 'Language Database:'
       end
+      object lblLanguage: TLabel
+        Left = 8
+        Top = 137
+        Width = 51
+        Height = 13
+        Caption = 'Language:'
+      end
       object edGameDir: TEdit
         Left = 113
-        Top = 69
+        Top = 61
         Width = 162
         Height = 21
         TabOrder = 0
       end
       object edLangDB: TEdit
         Left = 113
-        Top = 117
+        Top = 109
         Width = 162
         Height = 21
         TabOrder = 4
       end
       object cbLoadLangDB: TCheckBox
         Left = 8
-        Top = 149
+        Top = 165
         Width = 153
         Height = 17
         Caption = 'Load Language Database'
@@ -70,14 +77,14 @@ object frmOptions: TfrmOptions
       end
       object edSaveDir: TEdit
         Left = 113
-        Top = 93
+        Top = 85
         Width = 162
         Height = 21
         TabOrder = 2
       end
       object btnGameDir: TBitBtn
         Left = 279
-        Top = 69
+        Top = 61
         Width = 23
         Height = 22
         TabOrder = 1
@@ -113,7 +120,7 @@ object frmOptions: TfrmOptions
       end
       object btnSaveDir: TBitBtn
         Left = 279
-        Top = 93
+        Top = 85
         Width = 23
         Height = 22
         TabOrder = 3
@@ -149,7 +156,7 @@ object frmOptions: TfrmOptions
       end
       object btnLangDB: TBitBtn
         Left = 279
-        Top = 117
+        Top = 109
         Width = 23
         Height = 22
         TabOrder = 5
@@ -182,6 +189,16 @@ object frmOptions: TfrmOptions
           FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0C85180C85180C
           85180C8518FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
         Margin = 1
+      end
+      object cmbLanguage: TIntegerComboBox
+        Left = 113
+        Top = 133
+        Width = 162
+        Height = 21
+        Style = csDropDownList
+        ItemHeight = 13
+        Sorted = True
+        TabOrder = 7
       end
     end
     object tsColumns: TTabSheet
