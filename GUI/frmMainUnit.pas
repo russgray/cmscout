@@ -134,6 +134,33 @@ begin
       end;
     end;
 
+    // Read CM 03/04, if the game is installed
+    if (FGameDir = '') or (FSaveDir = '') or (FLangDB = '') then
+    begin
+      CMReg.CloseKey;
+      if CMReg.OpenKey('Software\Sports Interactive Ltd\Installs\Championship Manager 03-04', False) then
+      begin
+        if CMReg.ValueExists('Path') then
+        begin
+          CMPath:=CMReg.ReadString('Path');
+          if CMPath <> '' then
+          begin
+            CMPath:=IncludeTrailingPathDelimiter(CMPath);
+            if FGameDir = '' then
+              FGameDir:=CMPath + 'user data\games';
+            if FSaveDir = '' then
+              FSaveDir:=CMPath + 'user data';
+            if FLangDB = '' then
+            begin
+              FLangDB:=CMPath + 'data\db\lang_db.dat';
+              FLoadLangDB:=FileExists(FLangDB);
+            end;
+          end;
+        end;
+      end;
+    end;
+
+    // If CM 03/04 wasn't installed, then read CM 4 settings
     if (FGameDir = '') or (FSaveDir = '') or (FLangDB = '') then
     begin
       CMReg.CloseKey;
