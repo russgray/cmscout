@@ -35,7 +35,7 @@ SymbolDeprecated=1
 SymbolLibrary=1
 SymbolPlatform=1
 UnitLibrary=1
-UnitPlatform=1
+UnitPlatform=0
 UnitDeprecated=1
 HResultCompat=1
 HidingMember=1
@@ -88,14 +88,14 @@ RemoteSymbols=0
 MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
-ExeDescription=CMDatabase
+ExeDescription=
 [Directories]
 OutputDir=
 UnitOutputDir=
 PackageDLLOutputDir=
 PackageDCPOutputDir=
-SearchPath=
-Packages=vcl;rtl;dbrtl;adortl;vcldb;vclx;bdertl;vcldbx;ibxpress;dsnap;cds;bdecds;qrpt;teeui;teedb;tee;dss;teeqr;visualclx;visualdbclx;dsnapcrba;dsnapcon;VclSmp;vclshlctrls;vclie;xmlrtl;inet;inetdbbde;inetdbxpress;inetdb;nmfast;webdsnap;websnap;dbexpress;dbxcds;indy;MWOS;MLV;StatusBar;BrowseForFolder;IcsDel60;IISBrowserD6;tb2k_d6
+SearchPath=..\Database;..\Controls;..\Search
+Packages=vclx;vcl;rtl;indy;VclSmp;visualclx;vclactnband;vclshlctrls;ComDrv32
 Conditionals=
 DebugSourceDirs=
 UsePackages=0
@@ -105,8 +105,12 @@ HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=C:\Program Files\Programming\Borland\Delphi7\Bin\
 [Version Info]
-IncludeVerInfo=1
+IncludeVerInfo=0
 AutoIncBuild=0
 MajorVer=1
 MinorVer=0
@@ -130,3 +134,10 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[HistoryLists\hlSearchPath]
+Count=2
+Item0=..\Database;..\Controls;..\Search
+Item1=..\Database;..\Controls
