@@ -21,6 +21,7 @@ type
     FDays: Word;
     FYear: Word;
   public
+    constructor Create;
     procedure Load(DataFile: TCM4FileStream);
     function Date: TDateTime;
     function Age(Today: TCM4Date): Integer;
@@ -295,6 +296,7 @@ type
     FCurrentSquadStatus: ShortInt;
     FTransferStatus: ShortInt;
     FHappiness: Int64;
+    FStartDate: TCM4Date;
     FHappinessLevel: ShortInt;
     FPerceivedSquadStatus: ShortInt;
     FSquadNumber: ShortInt;
@@ -308,7 +310,7 @@ type
   public
     constructor Create; virtual;
     destructor Destroy; override;
-    procedure Load(DataFile: TCM4FileStream); virtual;
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt); virtual;
     procedure ConvertIndexes(Clubs, Nations, Teams: TCM4DatabaseContainer); virtual;
     property ContractType: WideString read GetContractType;
     property TeamContainerType: Byte read FTeamContainerType;
@@ -335,7 +337,7 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
-    procedure Load(DataFile: TCM4FileStream); override;
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt); override;
     property LeavingOnBosman: Boolean read FLeavingOnBosmanRule;
     property Clauses: TCM4ContractClauseList read FClauses;
     property FullTime: Boolean read FFullTime;
@@ -345,7 +347,7 @@ type
   private
     function GetContractType: WideString; override;
   public
-    procedure Load(DataFile: TCM4FileStream); override;
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt); override;
   end;
 
   TCM4TrialContract = class(TCM4Contract)
@@ -360,7 +362,7 @@ type
 
     function GetContractType: WideString; override;
   public
-    procedure Load(DataFile: TCM4FileStream); override;
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt); override;
     procedure ConvertIndexes(Clubs, Nations, Teams: TCM4DatabaseContainer); override;
   end;
 
@@ -375,7 +377,7 @@ type
     destructor Destroy; override;
     procedure Clear;
     function Count: Integer;
-    procedure Load(DataFile: TCM4FileStream);
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
     procedure ConvertIndexes(Clubs, Nations, Teams: TCM4DatabaseContainer);
     property Contract[Index: Integer]: TCM4Contract read GetContract; default;
     property FullContract: TCM4FullContract read GetFullContract;
@@ -536,12 +538,12 @@ type
     FSaleValue: Integer;
     procedure SkipBookingCount(DataFile: TCM4FileStream;
       BookingCountType: ShortInt);
-    procedure SkipPlayerInjuries(DataFile: TCM4FileStream);
+    procedure SkipPlayerInjuries(DataFile: TCM4FileStream; DBVersion: SmallInt);
 
     function GetPosition: WideString;
     function GetLongPosition: WideString;
   public
-    procedure Load(DataFile: TCM4FileStream);
+    procedure Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
     procedure ConvertIndexes(PlayingData: TCM4DatabaseContainer);
 
     property HomeReputation: SmallInt read FHomeReputation;
@@ -556,7 +558,7 @@ type
     property SaleValue: Integer read FSaleValue;
   end;
 
-  ICM4Player = interface
+  ICM4Player = interface(IInterface)
     ['{B4F0517B-9F8E-459A-8BD6-87E4CBBB87E7}']
     function GetPlayerData: TCM4PlayerData;
     function GetPosition: WideString;
@@ -942,6 +944,7 @@ const
   TI_NEXT_SALE_PERCENTAGE = 5;
   TI_APPEARANCE_MONEY = 6;
   TI_PLAYER_BUY_BACK = 7;
+  TI_UNKNOWN = 8;
 
   TC_CLUB = 0;
   TC_NATION = 1;
@@ -998,6 +1001,12 @@ begin
   Result:=Today.FYear - FYear;
   if Today.FDays < FDays then
     Dec(Result);
+end;
+
+constructor TCM4Date.Create;
+begin
+  FDays:=0;
+  FYear:=1900;
 end;
 
 function TCM4Date.Date: TDateTime;
@@ -1312,9 +1321,18 @@ begin
   DataFile.Skip(1);
   DataFile.Read(FReputation, 2);
   DataFile.Read(FDivision, 4);
-  // Skip Last Division and Stadium
-  DataFile.Skip(8);
+  // Skip Last Division
+  DataFile.Skip(4);
+
+  // Skip Unknown ID
+  if (DBVersion >= 145) then
+    DataFile.Skip(4);
+
+  // Skip Stadium
+  DataFile.Skip(4);
+
   DataFile.Read(FManager, 4);
+
   // Skip Continental Cup and Seeding, Home Match Day,
   // Future Continental Cup and Info,
   // First and Last Fixture Year,
@@ -1327,10 +1345,22 @@ begin
   DataFile.SkipByteArray(4);
   // Skip Number Of Unhappy Players
   DataFile.Skip(1);
+
   // Skip Team Fixture Blocks
-  DataFile.SkipWordArray(11);
+  if (DBVersion >= 145) then
+    DataFile.SkipWordArray(12)
+  else
+    DataFile.SkipWordArray(11);
+    
   // Skip Other Division
   DataFile.Skip(4);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Bytes
+    DataFile.Skip(8);
+  end;
+  
   inherited;
 end;
 
@@ -1340,6 +1370,13 @@ procedure TCM4NationalTeam.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
   // Skip National Team Data
   DataFile.Skip(13);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Byte
+    DataFile.Skip(1);
+  end;
+
   inherited;
 end;
 
@@ -1430,6 +1467,7 @@ end;
 procedure TCM4Nation.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   j, s: Integer;
+  impPlayer: Word;
 begin
   // Skip Number of Clubs, Staff and Players, Reputation,
   // FIFA Ranking, FIFA Ranking Points, Stadium, Wage Budget,
@@ -1456,6 +1494,22 @@ begin
       DataFile.SkipByteArray(4);
     end;
 
+  if (DBVersion >= 145) then
+  begin
+    // Skip Important Player Info
+    DataFile.Read(impPlayer, 2);
+    if (impPlayer = 1) then
+    begin
+      // Skip Unknown
+      DataFile.Skip(13);
+      // Skip Two Important Player Names
+      for j:=0 to 3 do
+        DataFile.SkipWideString;
+    end
+    else if (impPlayer <> 0) then
+      raise EFileCorruptError.Create('Nation data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Important Player Info: ' + IntToStr(impPlayer));
+  end;
+
   // Skip Style of Football and State Of Development
   DataFile.Skip(2);
   DataFile.Read(FGroupMembership, 1);
@@ -1464,14 +1518,26 @@ begin
     raise EFileCorruptError.Create('Nation data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Group Membership: ' + IntToStr(FGroupMembership));
 
   // Skip Game Importance, League Standard, League Selected,
-  // Rule Group Loaded, FIFA Full Member, Continent, Region
-  // and Capital City
-  DataFile.Skip(17);
+  // Rule Group Loaded, FIFA Full Member
+  DataFile.Skip(5);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Byte
+    DataFile.Skip(1);
+  end;
+
+  // Skip Continent, Region and Capital City
+  DataFile.Skip(12);
 
   // Skip Languages
   DataFile.SkipByteArray(4);
 
   // Skip Update Days
+  DataFile.Skip(1);
+
+  // Skip Unknown Byte
+  if (DBVersion >= 147) then
   DataFile.Skip(1);
 
   inherited;
@@ -1686,6 +1752,8 @@ begin
       if DBVersion > 110 then
         DataFile.Skip(4);
     end
+    else if TransferInfoType = TI_UNKNOWN then
+      DataFile.Skip(1)
     else
       raise EFileCorruptError.Create('Club data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Transfer Info Type: ' + IntToStr(TransferInfoType));
   end;
@@ -1859,11 +1927,13 @@ end;
 constructor TCM4Contract.Create;
 begin
   FEndDate:=TCM4Date.Create;
+  FStartDate:=TCM4Date.Create;
 end;
 
 destructor TCM4Contract.Destroy;
 begin
   FEndDate.Free;
+  FStartDate.Free;
   inherited;
 end;
 
@@ -1894,8 +1964,15 @@ begin
   end;
 end;
 
-procedure TCM4Contract.Load(DataFile: TCM4FileStream);
+procedure TCM4Contract.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Byte
+    if (not (Self is TCM4TrialContract)) then
+      DataFile.Skip(1);
+  end;
+
   DataFile.Read(FTeamContainerType, 1);
   if (FTeamContainerType <> TC_CLUB) and (FTeamContainerType <> TC_NATION) then
     raise EFileCorruptError.Create('Contract data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Team Container Type: ' + IntToStr(FTeamContainerType));
@@ -1911,6 +1988,9 @@ begin
   DataFile.Read(FTransferStatus, 1);
   DataFile.Read(FHappiness, 8);
 
+  if (DBVersion >= 145) then
+    FStartDate.Load(DataFile);
+
   DataFile.Read(FHappinessLevel, 1);
 //  if (FHappinessLevel < -100) or (FHappinessLevel > 100) then
 //    raise EFileCorruptError.Create('Contract data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Happiness Level: ' + IntToStr(FHappinessLevel));
@@ -1923,11 +2003,17 @@ begin
   DataFile.Skip(1);
 
   DataFile.Read(FSquadNumber, 1);
-  if (FSquadNumber < -1) or (FSquadNumber > 99) then
-    raise EFileCorruptError.Create('Contract data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Squad Number: ' + IntToStr(FSquadNumber));
+//  if (FSquadNumber < -1) or (FSquadNumber > 99) then
+//    raise EFileCorruptError.Create('Contract data seems to be corrupt, make sure the saved game can be loaded by CM4!' + #13#10 + 'Squad Number: ' + IntToStr(FSquadNumber));
 
   // Skip Transfer Offer Options
   DataFile.Skip(1);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Bytes
+    DataFile.Skip(2);
+  end;
 end;
 
 function TCM4Contract.GetPerceivedSquadStatus: WideString;
@@ -1991,7 +2077,7 @@ begin
     Result:='Part Time';
 end;
 
-procedure TCM4FullContract.Load(DataFile: TCM4FileStream);
+procedure TCM4FullContract.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   ClauseCount: Byte;
 begin
@@ -2014,10 +2100,13 @@ begin
   Result:='Loan Contract';
 end;
 
-procedure TCM4LoanContract.Load(DataFile: TCM4FileStream);
+procedure TCM4LoanContract.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
   // Skip Loan Contract Data
-  DataFile.Skip(7);
+  if (DBVersion >= 145) then
+    DataFile.Skip(6)
+  else
+    DataFile.Skip(7);
   inherited;
 end;
 
@@ -2042,7 +2131,7 @@ begin
   Result:='League Contract';
 end;
 
-procedure TCM4LeagueContract.Load(DataFile: TCM4FileStream);
+procedure TCM4LeagueContract.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
   DataFile.Read(FFullTime, 1);
   DataFile.Read(FTeam, 4);
@@ -2087,7 +2176,7 @@ begin
     Result:=nil;
 end;
 
-procedure TCM4ContractList.Load(DataFile: TCM4FileStream);
+procedure TCM4ContractList.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   ContractCount: Byte;
   j: Integer;
@@ -2099,7 +2188,7 @@ begin
   begin
     DataFile.Read(ContractType, 1);
     NewContract:=GetContractObject(ContractType);
-    NewContract.Load(DataFile);
+    NewContract.Load(DataFile, DBVersion);
     FContracts.Add(NewContract);
   end;
 end;
@@ -2163,13 +2252,14 @@ end;
 procedure TCM4Person.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   HasPreferences: Boolean;
+  HasName: Boolean;
   OfferCount, ContractType: Byte;
   j: Integer;
   Contract: TCM4Contract;
   RelCount: Byte;
   RecType: Byte;
   RelType: Byte;
-  AdNation: Pointer; 
+  AdNation: Pointer;
 begin
   DataFile.Read(FFirstName, 4);
   DataFile.Read(FSecondName, 4);
@@ -2178,6 +2268,13 @@ begin
   DataFile.Read(FNation, 4);
   DataFile.Read(FInternationalApps, 1);
   DataFile.Read(FInternationalGoals, 1);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip U21 Apps and Goals
+    DataFile.Skip(2);
+  end;
+  
   DataFile.Read(FNationalTeam, 4);
   DataFile.Read(FNationalJob, 1);
   FNationalJoinDate.Load(DataFile);
@@ -2194,7 +2291,7 @@ begin
   // Skip Contract Offer Decision Date Unique ID,
   // Person History Index
   DataFile.Skip(8);
-  FContracts.Load(DataFile);
+  FContracts.Load(DataFile, DBVersion);
 
   // Skip Contract Offers
   DataFile.Read(OfferCount, 1);
@@ -2204,9 +2301,13 @@ begin
     // Skip Decision, Work Permit State and
     // Transfer Offer Index
     DataFile.Skip(6);
-    Contract:=GetContractObject(ContractType);
-    Contract.Load(DataFile);
-    Contract.Free;
+
+    if (DBVersion < 145) or (ContractType <> 255) then
+    begin
+      Contract:=GetContractObject(ContractType);
+      Contract.Load(DataFile, DBVersion);
+      Contract.Free;
+    end;
   end;
 
   // Skip Preferences
@@ -2237,8 +2338,20 @@ begin
   // Skip Interested Clubs
   DataFile.SkipWordArray(4);
 
+  if (DBVersion >= 145) then
+  begin
+    DataFile.Read(HasName, 1);
+
+    if (HasName) then
+    begin
+      DataFile.SkipWideString;
+      DataFile.Skip(4);
+    end;
+  end;
+
   // Skip Person Flags
   DataFile.Skip(1);
+
   inherited;
 end;
 
@@ -2620,16 +2733,18 @@ end;
 
 { TCM4PlayerData }
 
-procedure TCM4PlayerData.Load(DataFile: TCM4FileStream);
+procedure TCM4PlayerData.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   HasCareerStats: Boolean;
   HasExtraPlayingData: Boolean;
   HasInjuryStatus: Boolean;
   BanCount: Byte;
-  j: Integer;
+  j, s: Integer;
   HasFixture: Boolean;
   BookingCountCount: Byte;
   BookingCountType: ShortInt;
+  UnknownBool: Boolean;
+  UnknownCount1, UnknownCount2: Byte;
 begin
   DataFile.Read(FHomeReputation, 2);
   DataFile.Read(FCurrentReputation, 2);
@@ -2661,7 +2776,7 @@ begin
   if HasExtraPlayingData then
   begin
     // Skip Player Injuries
-    SkipPlayerInjuries(DataFile);
+    SkipPlayerInjuries(DataFile, DBVersion);
 
     // Skip Bans
     DataFile.Read(BanCount, 1);
@@ -2689,9 +2804,33 @@ begin
 
   // Skip Training Info and Awol
   DataFile.Skip(38);
+
+  if (DBVersion >= 145) then
+  begin
+    DataFile.Read(UnknownBool, 1);
+    if (UnknownBool) then
+    begin
+      DataFile.Read(UnknownCount1, 1);
+
+      for s:=0 to UnknownCount1 - 1 do 
+      begin
+        DataFile.Skip(5);
+        DataFile.Read(UnknownCount2, 1);
+
+        for j:=0 to UnknownCount2 - 1 do
+        begin
+          DataFile.Skip(10);
+          DataFile.Read(UnknownBool, 1);
+
+          if (UnknownBool) then
+            DataFile.Skip(29);
+        end;
+      end;
+    end;
+  end;
 end;
 
-procedure TCM4PlayerData.SkipPlayerInjuries(DataFile: TCM4FileStream);
+procedure TCM4PlayerData.SkipPlayerInjuries(DataFile: TCM4FileStream; DBVersion: SmallInt);
 var
   InjuryCount: Byte;
   j: Integer;
@@ -2718,7 +2857,10 @@ begin
     end;
     DataFile.Skip(16);
 
-    DataFile.Skip(9);
+    if (DBVersion >= 145) then
+      DataFile.Skip(10)
+    else
+      DataFile.Skip(9);
   end;
 end;
 
@@ -2802,7 +2944,7 @@ end;
 
 procedure TCM4Player.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
-  FPlayerData.Load(DataFile);
+  FPlayerData.Load(DataFile, DBVersion);
   inherited;
 end;
 
@@ -2860,9 +3002,15 @@ end;
 
 procedure TCM4PlayerNonPlayer.Load(DataFile: TCM4FileStream; DBVersion: SmallInt);
 begin
-  FPlayerData.Load(DataFile);
+  FPlayerData.Load(DataFile, DBVersion);
   FNonPlayerData.Load(DataFile);
   inherited;
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Bytes
+    DataFile.Skip(2);
+  end;
 end;
 
 { TCM4Official }
@@ -2912,9 +3060,20 @@ begin
   // Skip TCP/IP Handle, On Holiday, Holiday Flags,
   // Number Unread News, Fog Of War Index,
   // Current Person Search Index
-  DataFile.Skip(12);
+  if (DBVersion >= 145) then
+    DataFile.Skip(16)
+  else
+    DataFile.Skip(12);
+    
   // Skip Password
   DataFile.SkipWideString;
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Byte
+    DataFile.Skip(1);
+  end;
+  
   // Skip Club Options, Nation Options, Match Highlight Type,
   // Match Playback Speed
   DataFile.Skip(67);
@@ -2932,6 +3091,13 @@ begin
 
   // Skip Initialised
   DataFile.Skip(1);
+
+  if (DBVersion >= 145) then
+  begin
+    DataFile.Skip(11);
+    DataFile.SkipByteArray(32);
+    DataFile.Skip(1);
+  end;
   
   inherited;
 end;
@@ -3436,6 +3602,12 @@ begin
   DataFile.Read(FVersatility, 1);
   DataFile.Read(FNaturalFitness, 1);
   DataFile.Read(FDetermination, 1);
+
+  if (DBVersion >= 145) then
+  begin
+    // Skip Unknown Byte
+    DataFile.Skip(1);
+  end;
 
   inherited;
 end;

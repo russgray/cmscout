@@ -66,7 +66,7 @@ begin
     DataFile.Read(DBVersion, 2);
     DataFile.Skip(6);
 
-    if (ByteHeader <> 0) or (WordHeader <> 46) or (StrHeader <> 'dat') or (DBVersion > 115) then
+    if (ByteHeader <> 0) or (WordHeader <> 46) or (StrHeader <> 'dat') or (DBVersion < 110) or (DBVersion > 200) then
       raise EFileCorruptError.Create('The lang_db.dat doesn''t seem to be a valid Language DB for CM4.');
 
     DataFile.Read(Offset, 4);

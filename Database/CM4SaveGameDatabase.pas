@@ -7,6 +7,13 @@ uses
   Classes;
 
 type
+  TCM4SaveGameHeader = packed record
+    Number1: Byte;
+    Number2: Word;
+    Game: array[0..2] of WideChar;
+    Version: Word;
+  end;
+  
   TCM4SaveGameDatabase = class
   private
     FFilename: string;
@@ -75,11 +82,6 @@ type
     property OnProgress: TProgressEvent read FOnProgress write SetOnProgress;
   end;
 
-  TCM4SaveGameHeader = array[0..12] of Byte;
-
-const
-  SAVE_HEADER: array[0..12] of Byte = (0, 46, 0, 99, 0, 109, 0, 52, 0, 1, 0, 0, 0);
-
 implementation
 
 { TCM4SaveGameDatabase }
@@ -137,7 +139,7 @@ end;
 procedure TCM4SaveGameDatabase.Load;
 var
   DataFile: TCM4FileStream;
-  Header: array[0..12] of Byte;
+  Header: TCM4SaveGameHeader;
   TableHeader: Byte;
   TableFilename: array[0..55] of Byte;
   TableExtension: array[0..7] of Byte;
@@ -155,16 +157,26 @@ begin
   end;
 
   try
-    DataFile.Read(Header, 13);
+    DataFile.Read(Header, 11);
 
-    if CompareMem(@Header, @SAVE_HEADER, 13) then
+    if ((Header.Number1 = 0) and (Header.Number2 = 46) and (Header.Game = 'cm4')) then
     begin
+      if (Header.Version = 1) then
+        DataFile.Skip(2)
+      else if (Header.Version = 2) then
+        DataFile.Skip(6)
+      else
+        raise EFileCorruptError.Create('The file doesn''t seem to be a valid CM4 saved game.');
+
       DataFile.Skip(54);
 
       TriggerStatus('Finding game_db.dat');
-      
+
       while (DataFile.Size - DataFile.Position >= 69) do
       begin
+        if (Header.Version = 2) then
+          DataFile.Skip(4);
+          
         DataFile.Read(TableHeader, 1);
 
         if TableHeader = 2 then
@@ -184,7 +196,7 @@ begin
       end;
     end
     else
-      raise EFileCorruptError.Create('The file doesn''t seem to be a valid CM4 saved game.'); 
+      raise EFileCorruptError.Create('The file doesn''t seem to be a valid CM4 saved game.');
   finally
     DataFile.Free;
   end;
@@ -219,16 +231,22 @@ begin
   if (byHeader <> 0) or (wrdHeader <> 46) or (strHeader <> 'dat') then
     raise EFileCorruptError.Create('The file doesn''t seem to be a valid CM4 saved game.');
 
-  if (DBVersion <> 110) and (DBVersion <> 112) and (DBVersion <> 113) and (DBVersion <> 115) then
+  if (DBVersion <> 110) and (DBVersion <> 112) and (DBVersion <> 113) and (DBVersion <> 115) and (DBVersion <> 145) and (DBVersion <> 146)  and (DBVersion <> 147) then
     raise EFileCorruptError.Create('Unknown database version: ' + IntToStr(DBVersion));
 
   // Skip game_db.dat header
   DataFile.Skip(6);
   FGameDate.Load(DataFile);
   DataFile.Skip(6);
+
+  if (DBVersion >= 145) then
+    DataFile.Skip(10);
   
   // Skip Awards
-  DataFile.SkipIntArray(43);
+  if (DBVersion >= 145) then
+    DataFile.SkipIntArray(45)
+  else
+    DataFile.SkipIntArray(43);
 
   // Skip Cities
   SkipCities(DataFile);
@@ -276,7 +294,10 @@ begin
   SkipSponsors(DataFile);
 
   // Skip Stadiums
-  DataFile.SkipIntArray(47);
+  if (DBVersion >= 145) then
+    DataFile.SkipIntArray(48)
+  else
+    DataFile.SkipIntArray(47);
 
   // Skip Stadium Changes
   DataFile.SkipIntArray(38);
