@@ -949,7 +949,7 @@ end;
 function TCMFilter.FilterName(Player: TCM4Player): Boolean;
 begin
   Result:=not AnsiContainsText(Player.FullName, FSearchForm.edName.Text);
-  if (not Result) and (Player.CommonName <> nil) then
+  if (Result) and (Player.CommonName <> nil) then
     Result:=not AnsiContainsText(Player.CommonName.Name, FSearchForm.edName.Text);
 end;
 
