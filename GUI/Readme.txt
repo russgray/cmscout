@@ -1,18 +1,18 @@
 ======================================================================
-                      CM Scout v. 3.00
+                      CM Scout v. 3.10
                      by Michael Nygreen
                    http://www.nygreen.net/
 ======================================================================
 
 This newest version of CM Scout is developed for Championship Manager
-4. The program will make it possible for you to find just the right
-player for your team, by giving you the option to filter the players
-by almost all possible attributes, both those visible and those hidden
-in the game. This program will help you scout for the right players,
-whether you are managing Real Madrid and on the lookout for the next
-big international star, or some small team in one of the lower
-leagues, looking for some cheap quality players that can improve your
-team in your quest for promotion. When you have found a list of
+4 and 03/04. The program will make it possible for you to find just
+the right player for your team, by giving you the option to filter the
+players by almost all possible attributes, both those visible and
+those hidden in the game. This program will help you scout for the
+right players, whether you are managing Real Madrid and on the lookout
+for the next big international star, or some small team in one of the
+lower leagues, looking for some cheap quality players that can improve
+your team in your quest for promotion. When you have found a list of
 players which fits your profile, you can export them to a shortlist
 file, which can be opened in the game and make it easy for you to
 submit offers for the right players.
@@ -28,6 +28,7 @@ players which you'll have to watch out for.
 ----------------------------------------------------------------------
 Current Features:
 ----------------------------------------------------------------------
+ - Load games from all versions of CM 4 and CM 03/04
  - Filter and Sort players by almost all possible attributes
  - List all players from one team
  - Exporting of search results to shortlist files, which can be opened
@@ -44,6 +45,10 @@ to help everybody with their problems.
 ----------------------------------------------------------------------
 Changelog:
 ----------------------------------------------------------------------
+Version 3.10:
+  Released 24-12-2003
+  - Loading of games from Championship Manager 03/04
+  - Player name search now also searches Common Names
 Version 3.00:
   Released 27-08-2003
   - First release for Championship Manager 4

@@ -23,7 +23,7 @@ object frmAbout: TfrmAbout
     Height = 13
     Alignment = taCenter
     AutoSize = False
-    Caption = 'CM Scout v. 3.00'
+    Caption = 'CM Scout v. 3.10'
   end
   object lblAbout2: TLabel
     Left = 8

@@ -1,6 +1,6 @@
 ; Program name and version
 !define MUI_PRODUCT "CM Scout"
-!define MUI_VERSION "3.00"
+!define MUI_VERSION "3.10"
 
 ; Use Modern UI
 !include "MUI.nsh"
@@ -75,6 +75,11 @@ Section "CM Scout" SecProgram
   
   ;Store install folder
   WriteRegStr HKCU "Software\nygreen.net\CMScout" "InstallDir" $INSTDIR
+  
+  ;Clear Settings To Prepare For CM 03/04, Should be removed for next version
+  WriteRegStr HKCU "Software\nygreen.net\CMScout" "GameDir" ""
+  WriteRegStr HKCU "Software\nygreen.net\CMScout" "SaveDir" ""
+  WriteRegStr HKCU "Software\nygreen.net\CMScout" "LangDB" ""
     
   !insertmacro MUI_STARTMENU_WRITE_BEGIN
     
