@@ -82,3 +82,6 @@ __recovery/
 
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
+
+# web test fixtures
+web/test/fixtures/
