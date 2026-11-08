@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CM Scout</title>
+<title>CM Scout 01/02</title>
 <style>
 :root {
   --bg: #f6f7f9; --panel: #ffffff; --panel2: #f0f2f5; --line: #dde1e7; --text: #1c2330; --muted: #6a7486;
@@ -157,13 +157,11 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
 <body>
 <header>
   <h1>CM <span>Scout</span></h1>
-  <span class="filebtn"><button class="primary" tabindex="-1">Load saved game…</button><input type="file" id="fileSave" accept=".cm4,.sav" title="Load a CM4 / CM 03-04 (.cm4) or CM 01/02 (.sav) saved game"></span>
-  <span class="filebtn" data-only="cm4"><button id="btnLangLabel" tabindex="-1" title="Optional: club, nation and competition names in your language">lang_db.dat…</button><input type="file" id="fileLang" accept=".dat" title="Load lang_db.dat (optional)"></span>
+  <span class="filebtn"><button class="primary" tabindex="-1">Load saved game…</button><input type="file" id="fileSave" accept=".sav" title="Load a Championship Manager 01/02 saved game (.sav)"></span>
   <span class="sep"></span>
   <button id="btnToggleFilters" title="Show/hide the search panel">Search panel</button>
   <button id="btnTeam" disabled>Team search…</button>
-  <span class="filebtn" data-only="cm4"><button id="btnLoadSlLabel" tabindex="-1" disabled>Load shortlist…</button><input type="file" id="fileSl" accept=".slf" disabled></span>
-  <button id="btnSaveSl" disabled title="Export the current list as a shortlist the game can open">Export shortlist</button>
+  <button id="btnSaveSl" disabled title="Export the current list as a .pls scout list for the game's Search folder">Export scout list</button>
   <button id="btnCsv" disabled title="Export the visible columns of the current list as CSV (semicolon-separated, like the original)">Export CSV</button>
   <span class="sep"></span>
   <button id="btnColumns">Columns…</button>
@@ -203,8 +201,7 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
           <div class="frow"><span>Home</span><div class="range" data-range="homeRep" data-max="10000"></div></div>
           <div class="frow"><span>Current</span><div class="range" data-range="curRep" data-max="10000"></div></div>
           <div class="frow"><span>World</span><div class="range" data-range="worldRep" data-max="10000"></div></div>
-          <div class="frow" data-only="cm4"><span>Squad</span><div class="range" data-range="squadRep" data-max="10000"></div></div>
-          <div class="frow" data-only="cm0102"><span>Club</span><div class="range" data-range="clubRep" data-max="10000"></div></div>
+          <div class="frow"><span>Club</span><div class="range" data-range="clubRep" data-max="10000"></div></div>
         </fieldset>
       </div>
       <div class="tabpane" id="tContract">
@@ -212,7 +209,7 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
           <div class="frow"><label for="f_contract">Contract</label><select id="f_contract" data-f="contract">
             <option value="">Any</option><option value="0">Free Transfer</option><option value="1">Expired</option><option value="2">Expiring (within 1 year)</option><option value="3">Unprotected</option></select></div>
           <div class="frow"><span></span><label><input type="checkbox" data-f="bosman"> Leaving on Bosman ruling</label></div>
-          <div class="frow" data-only="cm0102"><span></span><label><input type="checkbox" data-f="transferArranged"> No transfer arranged</label></div>
+          <div class="frow"><span></span><label><input type="checkbox" data-f="transferArranged"> No transfer arranged</label></div>
           <div class="frow"><label for="f_transfer">Transfer status</label><select id="f_transfer" data-f="transfer"><option value="">Any</option></select></div>
           <div class="frow"><label for="f_squadStatus">Squad status</label><select id="f_squadStatus" data-f="squadStatus"><option value="">Any</option></select></div>
           <div class="frow"><label for="f_contractType">Contract type</label><select id="f_contractType" data-f="contractType"><option value="">Any</option></select></div>
@@ -225,15 +222,13 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
             <label style="padding-left:22px"><input type="checkbox" data-f="relegActive"> …only if currently active</label>
             <label><input type="checkbox" data-f="nonPromo"> Non-promotion release clause</label>
             <label style="padding-left:22px"><input type="checkbox" data-f="nonPromoActive"> …only if currently active</label>
-            <label data-only="cm0102"><input type="checkbox" data-f="nonPlaying"> Non-playing release clause</label>
-            <label data-only="cm0102" style="padding-left:22px"><input type="checkbox" data-f="nonPlayingActive"> …only if currently active</label>
+            <label><input type="checkbox" data-f="nonPlaying"> Non-playing release clause</label>
+            <label style="padding-left:22px"><input type="checkbox" data-f="nonPlayingActive"> …only if currently active</label>
           </div>
-          <p class="note" data-only="cm4" style="margin:6px 0 0">The fee range applies to the ticked clauses.</p>
-          <p class="note" data-only="cm0102" style="margin:6px 0 0">The fee range is a separate filter: players with a contract whose release fee is in range.</p>
+          <p class="note" style="margin:6px 0 0">The fee range is a separate filter: players with a contract whose release fee is in range.</p>
         </fieldset>
         <fieldset><legend>Money</legend>
           <div class="frow"><span>Value</span><div class="range" data-range="value"></div></div>
-          <div class="frow" data-only="cm4"><span>Sale value</span><div class="range" data-range="saleValue"></div></div>
           <div class="frow"><span>Wage (p/w)</span><div class="range" data-range="wage"></div></div>
         </fieldset>
       </div>
@@ -264,8 +259,7 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
         <h2>Load a saved game to start scouting</h2>
         <div>Works fully offline in your browser. Nothing is uploaded.</div>
         <ol>
-          <li>Click <b>Load saved game…</b> and pick a <code>.cm4</code> save (CM4 or CM 03/04) or a <code>.sav</code> save (CM 01/02, compressed or not).</li>
-          <li>For CM4 / 03/04, optionally load <code>lang_db.dat</code> (in <code>data\db\</code> for CM 03/04) for full club, nation and division names.</li>
+          <li>Click <b>Load saved game…</b> and pick a Championship Manager 01/02 <code>.sav</code> save (compressed or not).</li>
           <li>Set filters on the left and press <b>Search</b>, or use <b>Team search</b>.</li>
         </ol>
       </div>
@@ -295,7 +289,7 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
       <label for="clubFind" class="note">Club</label>
       <input type="search" id="clubFind" placeholder="Type to filter clubs…" style="width:100%">
       <select id="clubList" size="12"></select>
-      <div style="margin-top:10px" data-only="cm4"><label for="squadSel" class="note">Squad</label><select id="squadSel"></select></div>
+      <div style="margin-top:10px" hidden><label for="squadSel" class="note">Squad</label><select id="squadSel"></select></div>
     </div>
     <div class="dlg-foot"><button value="cancel">Cancel</button><button class="primary" value="ok" id="teamOk" disabled>Show players</button></div>
   </form>
@@ -315,24 +309,18 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
   <form method="dialog">
     <div class="dlg-head"><h3>Settings</h3><button class="x" value="cancel">×</button></div>
     <div class="dlg-body">
-      <fieldset><legend>Language database</legend>
-        <div class="frow"><label for="langSel">Language</label><select id="langSel"></select></div>
-        <div class="note" id="langInfo"></div>
-        <div style="margin-top:8px"><label><input type="checkbox" id="langUse"> Use lang_db.dat names when loading games</label></div>
-        <div style="margin-top:8px"><button value="none" id="langForget" type="button">Forget lang_db.dat</button></div>
-      </fieldset>
       <fieldset><legend>Storage (this browser only)</legend>
         <div><label><input type="checkbox" id="cacheGame"> Remember the last loaded game between visits</label></div>
         <div class="note" style="margin:6px 0" id="storageInfo"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="forgetGame">Forget cached game</button><button type="button" id="clearStars">Clear starred players</button><button type="button" id="resetAll">Reset all settings</button></div>
       </fieldset>
-      <fieldset><legend>CM 01/02 scout lists (.pls)</legend>
+      <fieldset><legend>Scout lists (.pls)</legend>
         <label><input type="checkbox" id="plsInterested"> Save scout lists with the "Interested" filter</label>
       </fieldset>
       <fieldset><legend>Appearance</legend>
         <div class="frow"><label for="themeSel">Theme</label><select id="themeSel"><option value="">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
       </fieldset>
-      <p class="note">Port of CM Scout 3.10 and 2.00 by Michael Nygreen (nygreen.net). Supports saves from all versions of Championship Manager 4 and 03/04 (database versions 110–147) and Championship Manager 01/02. Columns, filters, saved searches and stars are kept separately for each game.</p>
+      <p class="note">Port of CM Scout 2.00 by Michael Nygreen (nygreen.net) for Championship Manager 01/02.</p>
     </div>
     <div class="dlg-foot"><button class="primary" value="ok">Done</button></div>
   </form>
@@ -348,635 +336,18 @@ dialog::backdrop { background: rgba(10,15,25,.45); }
 </dialog>
 
 <!-- ======================================================================
-     Binary parser. Direct port of Database/CM4SaveGameDatabase.pas,
-     CM4SaveGameData.pas and CM4LanguageData.pas. Runs in a Web Worker
-     (built from this script's text) or on the main thread as a fallback.
+     Binary parser. Direct port of CM0102/CMDatabase/*.pas (CM Scout 2.00).
+     Runs in a Web Worker (built from this script's text) or on the main
+     thread as a fallback.
      ====================================================================== -->
 <script id="parser-src">
 var CMParser = (function () {
   'use strict';
-  var PD_COUNT = 65;      // playing data attributes
-  var PERS_COUNT = 8;     // person data attributes
-  var STRIDE = PD_COUNT + PERS_COUNT;
-  var POS_T = 15;         // POSITION_THRESHOLD
-  var VERSIONS = [110, 112, 113, 115, 145, 146, 147];
-  var utf16 = new TextDecoder('utf-16le');
-
   function CorruptError(msg) { var e = new Error(msg); e.name = 'CorruptError'; return e; }
-
-  function Reader(buf) {
-    this.buf = buf;
-    this.dv = new DataView(buf);
-    this.bytes = new Uint8Array(buf);
-    this.pos = 0;
-    this.size = buf.byteLength;
-  }
-  Reader.prototype.need = function (n) {
-    if (this.pos + n > this.size)
-      throw CorruptError('Data file seems to be corrupt. Wanted to read ' + n + ' bytes, could only read ' + Math.max(0, this.size - this.pos) + ' bytes.');
-  };
-  Reader.prototype.u8 = function () { this.need(1); return this.bytes[this.pos++]; };
-  Reader.prototype.i8 = function () { this.need(1); return this.dv.getInt8(this.pos++); };
-  Reader.prototype.bool = function () { return this.u8() !== 0; };
-  Reader.prototype.u16 = function () { this.need(2); var v = this.dv.getUint16(this.pos, true); this.pos += 2; return v; };
-  Reader.prototype.i16 = function () { this.need(2); var v = this.dv.getInt16(this.pos, true); this.pos += 2; return v; };
-  Reader.prototype.i32 = function () { this.need(4); var v = this.dv.getInt32(this.pos, true); this.pos += 4; return v; };
-  // Seek in the original clamps to the stream; a later read then fails.
-  Reader.prototype.skip = function (n) { this.pos = Math.max(0, Math.min(this.pos + n, this.size)); };
-  Reader.prototype.seek = function (p) { this.pos = Math.max(0, Math.min(p, this.size)); };
-  Reader.prototype.ws = function () {
-    var len = this.i32();
-    if (len > 0) {
-      this.need(len * 2);
-      var s = utf16.decode(this.bytes.subarray(this.pos, this.pos + len * 2));
-      this.pos += len * 2;
-      this.skip(2);
-      return s;
-    }
-    return '';
-  };
-  Reader.prototype.skipWs = function () { var len = this.i32(); if (len > 0) this.skip(len * 2 + 2); };
-  Reader.prototype.count = function (n) { if (n < 0) throw CorruptError('Negative array length: ' + n); return n; };
-  Reader.prototype.skipByteArray = function (size) { this.skip(size * this.u8()); };
-  Reader.prototype.skipWordArray = function (size) { this.skip(size * this.u16()); };
-  Reader.prototype.skipIntArray = function (size) { this.skip(size * this.count(this.i32())); };
-  Reader.prototype.date = function () { var d = this.u16(); var y = this.u16(); return y * 1000 + d; }; // packed yyyyddd
-  Reader.prototype.list8 = function () { var n = this.u8(), a = new Array(n); for (var j = 0; j < n; j++) a[j] = this.i32(); return a; };
-  Reader.prototype.list16 = function () { var n = this.u16(), a = new Array(n); for (var j = 0; j < n; j++) a[j] = this.i32(); return a; };
-  Reader.prototype.wideFixed = function (bytes) { // PWideChar(@array) = '...'
-    this.need(bytes);
-    var s = '';
-    for (var j = 0; j < bytes; j += 2) { var c = this.dv.getUint16(this.pos + j, true); if (!c) break; s += String.fromCharCode(c); }
-    this.pos += bytes;
-    return s;
-  };
-  Reader.prototype.ascii = function (n) { this.need(n); var s = ''; for (var j = 0; j < n; j++) s += String.fromCharCode(this.bytes[this.pos + j]); this.pos += n; return s; };
-
-  function tail(r, e) { e.id = r.i32(); e.uid = r.i32(); return e; }
-
-  // --------------------------------------------------------------------
-  // Detects the game: CM4 / CM 03-04 saves start with 00 2E 00 'c' 00 'm' 00 '4';
-  // CM 01/02 saves start with a block table (see parseCM0102).
-  var BAD_SAVE = 'The file doesn\'t seem to be a valid CM4, CM 03/04 or CM 01/02 saved game.';
-  function isCM4(buf) {
-    if (buf.byteLength < 11) return false;
-    var b = new Uint8Array(buf, 0, 9);
-    return b[0] === 0 && b[1] === 46 && b[2] === 0 && b[3] === 99 && b[4] === 0 && b[5] === 109 && b[6] === 0 && b[7] === 52 && b[8] === 0;
-  }
+  var BAD_SAVE = 'The file doesn\'t seem to be a valid Championship Manager 01/02 saved game.';
   function parseSave(buf, report) {
-    if (isCM4(buf)) return parseCM4(buf, report);
     if (looksLikeCM0102(buf)) return parseCM0102(buf, report);
     throw CorruptError(BAD_SAVE);
-  }
-
-  function parseCM4(buf, report) {
-    report = report || function () {};
-    var r = new Reader(buf);
-    var bad = 'The file doesn\'t seem to be a valid CM4 saved game.';
-    if (r.size < 11) throw CorruptError(bad);
-    var n1 = r.u8(), n2 = r.u16(), game = r.ascii(6), hver = r.u16();
-    if (!(n1 === 0 && n2 === 46 && game === 'c\0m\x004\0')) throw CorruptError(bad);
-    if (hver === 1) r.skip(2);
-    else if (hver === 2) r.skip(6);
-    else throw CorruptError(bad);
-    r.skip(54);
-
-    report('Finding game_db.dat', 0);
-    while (r.size - r.pos >= 69) {
-      if (hver === 2) r.skip(4);
-      var th = r.u8();
-      if (th === 2) {
-        var fname = r.wideFixed(56), ext = r.wideFixed(8), len = r.i32();
-        if (fname === 'game_db' && ext === 'dat') return loadData(r, report);
-        r.skip(len);
-      }
-    }
-    throw CorruptError('Couldn\'t find game_db.dat inside the saved game.');
-  }
-
-  function loadData(r, report) {
-    var b = r.u8(), w = r.u16(), s = r.ascii(6), v = r.i16();
-    if (b !== 0 || w !== 46 || s !== 'd\0a\0t\0') throw CorruptError('The file doesn\'t seem to be a valid CM4 saved game.');
-    if (VERSIONS.indexOf(v) < 0) throw CorruptError('Unknown database version: ' + v);
-    var ge145 = v >= 145;
-
-    r.skip(6);
-    var gameDate = r.date();
-    r.skip(6);
-    if (ge145) r.skip(10);
-    r.skipIntArray(ge145 ? 45 : 43);                                          // Awards
-
-    function skipTable(label, fn) {
-      report('Skipping ' + label, 0);
-      var n = r.count(r.i32());
-      for (var j = 0; j < n; j++) fn();
-    }
-    function container(label, fn) {
-      report('Loading ' + label, 0);
-      var n = r.count(r.i32()), out = new Array(n), step = Math.max(1, n >> 6);
-      for (var j = 0; j < n; j++) {
-        try { out[j] = fn(r.u8(), j, n); }
-        catch (e) {
-          if (e.name === 'CorruptError')
-            throw new Error('Error loading ' + label + ' entity number: ' + j + '\nFile position: ' + r.pos + '\nDatabase version: ' + v + '\n' + e.message);
-          throw e;
-        }
-        if (j % step === 0) report('Loading ' + label, j / n);
-      }
-      return out;
-    }
-    function badType(what, val) { return CorruptError(what + ' data seems to be corrupt, make sure the saved game can be loaded by CM4!\n' + val); }
-
-    skipTable('Cities', function () { r.skip(19); r.skipWs(); r.skip(11); });
-
-    // ---- TeamCont (base of Club and Nation)
-    function teamCont(e) {
-      e.ct = r.u8();
-      if (e.ct !== 0 && e.ct !== 1) throw badType('Club', 'Team Type: ' + e.ct);
-      r.skip(2);
-      e.n = r.ws(); e.s = r.ws();
-      r.skipByteArray(6);
-      e.teams = r.list8();
-      r.skipByteArray(8);
-      return tail(r, e);
-    }
-
-    // ---- Clubs
-    var clubs = container('Clubs', function (rt) {
-      var e = { lb: false };
-      if (rt === 12) { e.lb = true; r.skip(9); }
-      else if (rt !== 0) throw badType('Club', 'Record Type: ' + rt);
-      e.nation = r.i32();
-      r.skip(1); e.n1 = r.ws();
-      r.skip(1); e.n2 = r.ws();
-      r.skip(17);
-      r.skip(4);                    // chairman
-      r.skip(2);
-      r.list8(); r.list8();         // directors, scouts
-      var ft = r.u8();
-      if (ft === 0) r.skip(4);
-      else if (ft === 1) { r.skip(421); if (v > 110) r.skip(16); if (v >= 115) r.skip(1); }
-      if (r.i32() !== 0) r.skip(13); // sponsor
-      r.skipWordArray(4);           // transfer offers
-      var ti = r.u16();
-      for (var j = 0; j < ti; j++) {
-        var t = r.u8();
-        if (t === 5) r.skip(10);
-        else if (t === 6) r.skip(15);
-        else if (t === 1) r.skip(1);
-        else if (t === 2) r.skip(5);
-        else if (t === 3) { if (r.bool()) r.skipByteArray(4); r.skip(5); }
-        else if (t === 4) r.skip(16);
-        else if (t === 7) r.skip(12);
-        else if (t === 0) { r.skip(1); if (v > 110) r.skip(4); }
-        else if (t === 8) r.skip(1);
-        else throw badType('Club', 'Transfer Info Type: ' + t);
-      }
-      r.skipByteArray(6);
-      r.skip(12);
-      r.skipWordArray(4);
-      r.skipByteArray(5);
-      r.skip(5);
-      return teamCont(e);
-    });
-
-    // ---- Competitions
-    var comps = container('Competitions', function (rt) {
-      if (rt !== 0) throw badType('Competition', 'Record Type: ' + rt);
-      var e = { n: '', s: '' };
-      r.skip(11);
-      var nt = r.u8();
-      r.skip(1);
-      if (nt === 4) { e.s = r.ws(); e.n = r.ws(); }
-      r.skip(4);
-      e.nation = r.i32();
-      r.skip(13);
-      return tail(r, e);
-    });
-
-    r.skipIntArray(17);                                                       // Continents
-    skipTable('Injuries', function () { r.skip(1); r.skipWs(); r.skip(2); r.skipWs(); r.skip(17); });
-    skipTable('Media', function () { r.skip(1); r.skipWs(); r.skip(1); r.skipWs(); r.skip(2); r.skipByteArray(4); r.skip(14); });
-    skipTable('Languages', function () { r.skip(1); r.skipWs(); r.skip(21); });
-
-    // ---- Nations
-    var nations = container('Nations', function (rt) {
-      if (rt !== 0) throw badType('Nation', 'Record Type: ' + rt);
-      var e = { nat: '' };
-      r.skip(51);
-      r.skipByteArray(2); r.skipByteArray(4); r.skipByteArray(4);
-      r.skipWordArray(4);
-      for (var j = 0; j < 8; j++) { r.skip(2); r.skipByteArray(4); }
-      if (ge145) {
-        var imp = r.u16();
-        if (imp === 1) { r.skip(13); for (var k = 0; k < 4; k++) r.skipWs(); }
-        else if (imp !== 0) throw badType('Nation', 'Important Player Info: ' + imp);
-      }
-      r.skip(2);
-      var gm = r.u8();
-      if (gm > 2) throw badType('Nation', 'Group Membership: ' + gm);
-      e.eu = gm === 2;
-      r.skip(5);
-      if (ge145) r.skip(1);
-      r.skip(12);
-      r.skipByteArray(4);
-      r.skip(1);
-      if (v >= 147) r.skip(1);
-      return teamCont(e);
-    });
-
-    function names(label) {
-      return container(label, function (rt) {
-        if (rt !== 0) throw badType('Name', 'Record Type: ' + rt);
-        var n = r.ws(); r.skip(6); r.skip(8); return n;
-      });
-    }
-    var firstNames = names('First Names');
-    var secondNames = names('Second Names');
-    var commonNames = names('Common Names');
-
-    r.skipIntArray(9);                                                        // Regions
-    skipTable('Sponsors', function () { r.skip(1); r.skipWs(); r.skip(1); r.skipWs(); r.skip(10); });
-    r.skipIntArray(ge145 ? 48 : 47);                                          // Stadiums
-    r.skipIntArray(38);                                                       // Stadium changes
-    skipTable('Stages', function () { r.skip(1); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); r.skipWs(); r.skip(9); });
-
-    // ---- Teams
-    var teams = container('Teams', function (rt) {
-      var e = {};
-      if (rt === 11) { r.skip(13); if (ge145) r.skip(1); }
-      else if (rt !== 10) throw badType('Team', 'Record Type: ' + rt);
-      r.skip(1);
-      e.rep = r.u16();
-      e.div = r.i32();
-      r.skip(4);
-      if (ge145) r.skip(4);
-      r.skip(4);
-      r.skip(4);                    // manager
-      r.skip(19);
-      r.list8();                    // physios
-      e.pl = r.list16();            // players
-      r.list8();                    // coaches
-      r.skipByteArray(4);
-      r.skip(1);
-      r.skipWordArray(ge145 ? 12 : 11);
-      r.skip(4);
-      if (ge145) r.skip(8);
-      // TeamBase
-      e.tt = r.i8();
-      if (e.tt < 0 || e.tt > 18) throw badType('Team', 'Team Type: ' + e.tt);
-      e.ct = r.u8();
-      if (e.ct !== 0 && e.ct !== 1) throw badType('Team', 'Team Container Type: ' + e.ct);
-      r.skip(1);
-      e.c = r.i32();
-      return tail(r, e);
-    });
-
-    skipTable('Weather', function () { r.skip(1); r.skipWs(); r.skip(87); });
-    r.skipIntArray(10);                                                       // Player types
-
-    // ---- Contracts
-    function contract(type) {
-      var c = { t: type };
-      if (type === 0) {
-        c.ft = r.bool(); c.b = r.bool();
-        r.skip(18);
-        var cc = r.u8();
-        r.skip(6);
-        c.cl = [];
-        for (var j = 0; j < cc; j++) { var ct = r.i8(), fee = r.i32(); if (ct >= 0 && ct <= 14) c.cl.push([ct, fee]); }
-      } else if (type === 1) r.skip(ge145 ? 6 : 7);
-      else if (type === 2) { /* trial */ }
-      else if (type === 5) { c.ft = r.bool(); r.skip(4); r.skip(2); }
-      else throw CorruptError('Contract data seems to be corrupt, make sure the saved game can be loaded by CM4!\nContract Type: ' + type);
-      if (ge145 && type !== 2) r.skip(1);
-      c.ct = r.u8();
-      if (c.ct !== 0 && c.ct !== 1) throw badType('Contract', 'Team Container Type: ' + c.ct);
-      c.c = r.i32();
-      c.w = r.i32();
-      c.e = r.date();
-      c.ss = r.i8();
-      if (c.ss < -1 || c.ss > 7) throw badType('Contract', 'Current Squad Status: ' + c.ss);
-      c.ts = r.i8();
-      r.skip(8);                    // happiness (int64)
-      if (ge145) r.skip(4);         // start date
-      c.h = r.i8();
-      c.ps = r.i8();
-      if (c.ps < -1 || c.ps > 7) throw badType('Contract', 'Percieved Squad Status: ' + c.ps);
-      r.skip(1);
-      c.n = r.i8();
-      r.skip(1);
-      if (ge145) r.skip(2);
-      return c;
-    }
-
-    // ---- Person (base of every person record type)
-    function person(p) {
-      p.f = r.i32(); p.s = r.i32(); p.cn = r.i32();
-      p.dob = r.date();
-      p.nat = r.i32();
-      p.apps = r.u8(); p.goals = r.u8();
-      if (ge145) r.skip(2);
-      r.skip(4); r.skip(1); r.skip(4);  // national team, job, join date
-      p.team = r.i32();
-      r.skip(1);
-      p.joined = r.date();
-      r.skip(1);
-      p.pd = r.i32();
-      r.skip(4);
-      r.skipByteArray(4);
-      r.skip(8);
-      var n = r.u8(), j;
-      p.k = new Array(n);
-      for (j = 0; j < n; j++) p.k[j] = contract(r.u8());
-      n = r.u8();                                     // contract offers
-      for (j = 0; j < n; j++) { var t = r.u8(); r.skip(6); if (!ge145 || t !== 255) contract(t); }
-      p.an = [];
-      if (r.bool()) {                                 // preferences
-        n = r.u8();
-        for (j = 0; j < n; j++) {
-          if (r.u8() === 2) {
-            if (r.u8() === 9) { r.skip(2); p.an.push(r.i32()); } else r.skip(6);
-          } else r.skip(7);
-        }
-      }
-      r.skipWordArray(4);
-      if (ge145 && r.bool()) { r.skipWs(); r.skip(4); }
-      r.skip(1);
-      return tail(r, p);
-    }
-    function playerData(p) {
-      p.hr = r.i16(); p.cr = r.i16(); p.wr = r.i16(); p.ca = r.i16(); p.pa = r.i16();
-      p.pld = r.i32();
-      r.skip(4);
-      p.val = r.i32();
-      r.skip(20);
-      p.sv = r.i32();
-      if (r.bool()) r.skip(16);
-      r.skip(4);
-      var j, k, n;
-      if (r.bool()) {
-        n = r.u8();                                   // injuries
-        for (j = 0; j < n; j++) {
-          r.skip(10);
-          var fx = r.i8();
-          if (fx === 0) r.skip(1); else if (fx === 1) r.skip(3); else if (fx === 3 || fx === 5) r.skip(5); else if (fx === 7) r.skip(7);
-          else throw badType('Player Injury', 'Injury Fixture Type: ' + fx);
-          r.skip(16);
-          r.skip(ge145 ? 10 : 9);
-        }
-        n = r.u8();                                   // bans
-        for (j = 0; j < n; j++) { r.skip(18); if (r.bool()) r.skip(39); }
-        if (r.bool()) r.skip(26);                     // injury status
-      }
-      n = r.u8();                                     // booking counts
-      for (j = 0; j < n; j++) {
-        var bt = r.i8();
-        if (bt === 0) r.skip(3); else if (bt === 1 || bt === 2) r.skip(5); else if (bt === 3) r.skip(8); else if (bt === 4) r.skip(4);
-        else throw badType('Booking Count', 'Booking Count Type: ' + bt);
-      }
-      r.skip(38);
-      if (ge145 && r.bool()) {
-        var c1 = r.u8();
-        for (j = 0; j < c1; j++) { r.skip(5); var c2 = r.u8(); for (k = 0; k < c2; k++) { r.skip(10); if (r.bool()) r.skip(29); } }
-      }
-    }
-    function nonPlayerData() { r.skip(10); r.skip(1); r.skip(4); }
-    function skipFilterList() {
-      var lt = r.ascii(8), n, j, s, ic, ft, it;
-      function err(x) { return badType('Human Non Player', x); }
-      if (lt === 'slfttslf' || lt === 'tslttslf') {
-        n = r.i32();
-        for (j = 0; j < n; j++) {
-          ft = r.ascii(8);
-          if (ft !== 'daqstlif') throw err('Filter Type: ' + ft);
-          r.skipWs(); r.skip(5); ic = r.i32();
-          for (s = 0; s < ic; s++) {
-            it = r.ascii(4);
-            if (it === 'rfqs') r.skip(10); else if (it === 'rfsp') r.skip(2); else if (it === 'rfpv') r.skip(3); else throw err('Filter Info Type: ' + it);
-          }
-        }
-        if (lt !== 'tslttslf') r.skip(10);
-      } else if (lt === 'tslntslf') {
-        n = r.i32();
-        for (j = 0; j < n; j++) {
-          ft = r.ascii(8);
-          if (ft !== 'swentlif') throw err('Filter Type: ' + ft);
-          r.skipWs(); r.skip(5); ic = r.i32();
-          for (s = 0; s < ic; s++) { it = r.ascii(4); if (it === 'rfsn') r.skip(1); else if (it === 'rfcn') r.skip(2); else throw err('Filter Info Type: ' + it); }
-        }
-        r.skip(4);
-      } else if (lt === 'ltontslf') {
-        n = r.i32();
-        for (j = 0; j < n; j++) {
-          ft = r.ascii(8);
-          if (ft !== 'etontlif') throw err('Filter Type: ' + ft);
-          r.skipWs(); r.skip(5); ic = r.i32();
-          for (s = 0; s < ic; s++) { it = r.ascii(4); if (it === 'rftn') r.skip(9); else throw err('Filter Info Type: ' + it); }
-        }
-      } else if (lt === 'tslhtslf') {
-        n = r.i32();
-        for (j = 0; j < n; j++) {
-          ft = r.ascii(8);
-          if (ft !== 'ntantlif') throw err('Filter Type: ' + ft);
-          r.skipWs(); r.skip(5); ic = r.i32();
-          for (s = 0; s < ic; s++) { it = r.ascii(4); if (it === 'rftn') { r.skip(2); r.skipIntArray(8); r.skip(8); } else throw err('Filter Info Type: ' + it); }
-        }
-      } else throw err('Filter List Type: ' + lt);
-    }
-
-    // ---- People. Only players are kept; everything else is parsed and dropped.
-    var people = container('People', function (rt) {
-      switch (rt) {
-        case 1: nonPlayerData(); person({}); return null;
-        case 2: var p = {}; playerData(p); return person(p);
-        case 3: var q = {}; playerData(q); nonPlayerData(); person(q); if (ge145) r.skip(2); return q;
-        case 4: r.skip(24); person({}); return null;
-        case 5: r.skipWs(); r.skipWs(); r.skip(2); r.skip(8); return null;
-        case 6: r.skip(1); r.skip(8); return null;
-        case 7: r.skip(6); r.skip(8); return null;
-        case 8: person({}); return null;
-        case 9:
-          r.skip(ge145 ? 16 : 12);
-          r.skipWs();
-          if (ge145) r.skip(1);
-          r.skip(67);
-          r.skipByteArray(8);
-          r.skip(96);
-          var fl = r.i32();
-          for (var j = 0; j < fl; j++) skipFilterList();
-          if (v >= 115) r.skip(4);
-          r.skip(1);
-          if (ge145) { r.skip(11); r.skipByteArray(32); r.skip(1); }
-          nonPlayerData(); person({});
-          return null;
-        default: throw badType('Person', 'Record Type: ' + rt);
-      }
-    });
-
-    // ---- Person data / playing data: packed into typed arrays
-    report('Loading Person Data', 0);
-    var nPers = r.count(r.i32()), persBuf = new Int8Array(nPers * PERS_COUNT), j, k;
-    for (j = 0; j < nPers; j++) {
-      if (r.u8() !== 0) throw new Error('Error loading Person Data entity number: ' + j + '\n' + badType('Person Data', 'Record Type').message);
-      r.need(PERS_COUNT);
-      for (k = 0; k < PERS_COUNT; k++) persBuf[j * PERS_COUNT + k] = r.dv.getInt8(r.pos + k);
-      r.pos += PERS_COUNT; r.skip(8);
-    }
-    report('Loading Playing Data', 0);
-    var nPlay = r.count(r.i32()), playBuf = new Int8Array(nPlay * PD_COUNT);
-    for (j = 0; j < nPlay; j++) {
-      if (r.u8() !== 0) throw new Error('Error loading Playing Data entity number: ' + j + '\n' + badType('Playing Data', 'Record Type').message);
-      r.need(PD_COUNT);
-      for (k = 0; k < PD_COUNT; k++) playBuf[j * PD_COUNT + k] = r.dv.getInt8(r.pos + k);
-      r.pos += PD_COUNT;
-      if (ge145) r.skip(1);
-      r.skip(8);
-      if (j % 4096 === 0) report('Loading Playing Data', j / nPlay);
-    }
-    report('Loading Non Playing Data', 0);
-    var nNon = r.count(r.i32());
-    for (j = 0; j < nNon; j++) { if (r.u8() !== 0) throw badType('Non Playing Data', 'Record Type'); r.skip(28 + 8); }
-
-    return convert({
-      version: v, gameDate: gameDate, clubs: clubs, comps: comps, nations: nations, teams: teams,
-      firstNames: firstNames, secondNames: secondNames, commonNames: commonNames,
-      people: people, persBuf: persBuf, nPers: nPers, playBuf: playBuf, nPlay: nPlay
-    }, report);
-  }
-
-  // ---- ConvertIndexes + scout ratings, producing the compact model sent to the UI
-  function inRange(i, n) { return i >= 0 && i < n ? i : -1; }
-
-  function highConvert(ability, value) {
-    var t = ((value * 2) + ability) * 0.05 + 10;
-    t = (((t * t) * 0.1) + t) * (1 / 3) + 0.5;
-    return t < 1 ? 1 : t > 20 ? 20 : Math.trunc(t);
-  }
-  function lowConvert(ability, value) {
-    var t = ((ability * 0.1) + (value * 2)) * 0.05 + 10;
-    t = (((t * t) * 0.1) + t) * (1 / 3) + 0.5;
-    return t < 1 ? 1 : t > 20 ? 20 : Math.trunc(t);
-  }
-  // indexes into the 65 playing-data attributes, in file order
-  var A = {}; ['Goalkeeper','Sweeper','Defender','DefensiveMidfielder','Midfielder','AttackingMidfielder','Attacker','WingBack','FreeRole','RightSide','LeftSide','Central','Crossing','Dribbling','Finishing','Heading','LongShots','Marking','OffTheBall','Passing','Penalties','Tackling','Creativity','Handling','AerialAbility','CommandOfArea','Communication','Kicking','Throwing','Anticipation','Decisions','OneOnOnes','Positioning','Reflexes','ThrowIns','FirstTouch','Technique','LeftFoot','RightFoot','Flair','Corners','Teamwork','WorkRate','LongThrows','Eccentricity','RushingOut','TendencyToPunch','Acceleration','SetPieces','Strength','Stamina','Pace','Jumping','Influence','Dirtiness','Balance','Bravery','Consistency','Aggression','Agility','ImportantMatches','InjuryProneness','Versatility','NaturalFitness','Determination']
-    .forEach(function (k, i) { A[k] = i; });
-  var HIGH_OUT = ['Crossing','Dribbling','Finishing','Heading','LongShots','Marking','OffTheBall','Passing','Penalties','Tackling','Creativity'].map(function (k) { return A[k]; });
-  var GK_ATTR = ['Handling','AerialAbility','CommandOfArea','Communication','Kicking','Throwing'].map(function (k) { return A[k]; });
-  var ALWAYS_HIGH = ['Anticipation','Decisions','OneOnOnes','Positioning','Reflexes','ThrowIns','FirstTouch','Technique'].map(function (k) { return A[k]; });
-
-  function convertRelative(buf, o, ca) {
-    var j, gk = buf[o + A.Goalkeeper] >= POS_T;
-    for (j = 0; j < HIGH_OUT.length; j++) buf[o + HIGH_OUT[j]] = (gk ? lowConvert : highConvert)(ca, buf[o + HIGH_OUT[j]]);
-    for (j = 0; j < GK_ATTR.length; j++) buf[o + GK_ATTR[j]] = (gk ? highConvert : lowConvert)(ca, buf[o + GK_ATTR[j]]);
-    for (j = 0; j < ALWAYS_HIGH.length; j++) buf[o + ALWAYS_HIGH[j]] = highConvert(ca, buf[o + ALWAYS_HIGH[j]]);
-  }
-
-  // TCM4PlayerScoutRating, ported term by term. x(k) = playing attribute, pe = person data.
-  function scoutRatings(x, pe, ca, out) {
-    function personPart() {
-      return pe[0] / 20 * 3 + pe[1] / 20 * 5 + pe[2] / 20 * 4 + pe[3] / 20 * 6 + pe[4] / 20 * 3 + pe[5] / 20 * 2 + pe[6] / 20 * 1 + (21 - pe[7]) / 20 * 1;
-    }
-    function sum(terms) { var s = 0; for (var i = 0; i < terms.length; i += 2) s += x(terms[i]) / 20 * terms[i + 1]; return s; }
-    var base = personPart(), caPart = ca / 200 * 25;
-    var ip = x('InjuryProneness'), dirt = 21 - x('Dirtiness');
-    // GK
-    var gk = base + sum(['Goalkeeper',20,'Handling',20,'AerialAbility',15,'CommandOfArea',12,'Communication',10,'Kicking',5,'Throwing',5,'Anticipation',2,'Decisions',8,'OneOnOnes',10,'Positioning',10,'Reflexes',15,'FirstTouch',2,'Technique',1])
-      + (21 - x('Eccentricity')) / 20 * 5 + x('RushingOut') / 20 * 6 + (21 - x('TendencyToPunch')) / 20 * 5
-      + sum(['Acceleration',4,'Strength',8,'Stamina',1,'Jumping',10,'Influence',8]) + dirt / 20 * 3
-      + sum(['Balance',8,'Bravery',7,'Consistency',6,'Aggression',8,'Agility',8,'ImportantMatches',5]) + (21 - ip) / 20 * 3
-      + sum(['Versatility',1,'NaturalFitness',3,'Determination',5,'Dribbling',5,'Heading',6,'Marking',2,'Passing',8,'Penalties',1,'Tackling',7,'LeftFoot',2,'RightFoot',2,'Flair',3,'Teamwork',4,'WorkRate',3])
-      + caPart;
-    out[0] = gk / 333 * 100;
-    // Outfield ratings share the same shape; note (InjuryProneness - 21) as in the original.
-    function outfield(posTerm, t, dirtW, div) {
-      return (base + posTerm + sum(t) + dirt / 20 * dirtW + (ip - 21) / 20 * 5 + caPart) / div * 100;
-    }
-    var dPos = (x('Sweeper') > x('Defender') ? x('Sweeper') : x('Defender')) / 20 * 20;
-    out[1] = outfield(dPos, ['Crossing',3,'Dribbling',2,'Finishing',1,'Heading',10,'LongShots',5,'Marking',20,'OffTheBall',4,'Passing',8,'Penalties',1,'Tackling',20,'Creativity',1,'Anticipation',4,'Decisions',7,'OneOnOnes',1,'Positioning',15,'Reflexes',1,'ThrowIns',1,'FirstTouch',4,'Technique',3,'LeftFoot',2,'RightFoot',2,'Flair',1,'Corners',5,'Teamwork',7,'WorkRate',6,'LongThrows',5,'Acceleration',7,'SetPieces',4,'Strength',8,'Stamina',10,'Pace',7,'Jumping',5,'Influence',7,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',3,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',5,'Determination',5], 8, 296);
-    out[2] = outfield(x('DefensiveMidfielder') / 20 * 20, ['Crossing',8,'Dribbling',5,'Finishing',6,'Heading',10,'LongShots',8,'Marking',15,'OffTheBall',6,'Passing',10,'Penalties',1,'Tackling',15,'Creativity',5,'Anticipation',5,'Decisions',6,'OneOnOnes',3,'Positioning',12,'Reflexes',1,'ThrowIns',1,'FirstTouch',7,'Technique',6,'LeftFoot',2,'RightFoot',2,'Flair',5,'Corners',5,'Teamwork',9,'WorkRate',10,'LongThrows',5,'Acceleration',7,'SetPieces',4,'Strength',10,'Stamina',12,'Pace',6,'Jumping',5,'Influence',8,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',8,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',5,'Determination',5], 5, 331);
-    out[3] = outfield(x('Midfielder') / 20 * 20, ['Crossing',10,'Dribbling',10,'Finishing',8,'Heading',8,'LongShots',10,'Marking',8,'OffTheBall',9,'Passing',12,'Penalties',1,'Tackling',7,'Creativity',10,'Anticipation',8,'Decisions',6,'OneOnOnes',5,'Positioning',7,'Reflexes',1,'ThrowIns',1,'FirstTouch',11,'Technique',12,'LeftFoot',2,'RightFoot',2,'Flair',10,'Corners',5,'Teamwork',8,'WorkRate',12,'LongThrows',5,'Acceleration',9,'SetPieces',4,'Strength',7,'Stamina',13,'Pace',8,'Jumping',5,'Influence',7,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',6,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',5,'Determination',5], 3, 348);
-    out[4] = outfield(x('AttackingMidfielder') / 20 * 20, ['Crossing',15,'Dribbling',15,'Finishing',12,'Heading',6,'LongShots',12,'Marking',3,'OffTheBall',12,'Passing',14,'Penalties',1,'Tackling',2,'Creativity',15,'Anticipation',10,'Decisions',3,'OneOnOnes',8,'Positioning',4,'Reflexes',1,'ThrowIns',1,'FirstTouch',14,'Technique',13,'LeftFoot',2,'RightFoot',2,'Flair',12,'Corners',5,'Teamwork',4,'WorkRate',5,'LongThrows',5,'Acceleration',10,'SetPieces',4,'Strength',5,'Stamina',5,'Pace',10,'Jumping',5,'Influence',3,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',2,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',3,'Determination',5], 1, 337);
-    out[5] = outfield(x('AttackingMidfielder') / 20 * 20, ['Crossing',18,'Dribbling',18,'Finishing',8,'Heading',4,'LongShots',8,'Marking',5,'OffTheBall',10,'Passing',12,'Penalties',1,'Tackling',5,'Creativity',15,'Anticipation',10,'Decisions',2,'OneOnOnes',6,'Positioning',5,'Reflexes',1,'ThrowIns',1,'FirstTouch',10,'Technique',11,'LeftFoot',2,'RightFoot',2,'Flair',13,'Corners',5,'Teamwork',6,'WorkRate',7,'LongThrows',5,'Acceleration',13,'SetPieces',4,'Strength',5,'Stamina',8,'Pace',15,'Jumping',5,'Influence',2,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',2,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',5,'Determination',5], 1, 343);
-    out[6] = outfield(x('Attacker') / 20 * 20, ['Crossing',6,'Dribbling',15,'Finishing',20,'Heading',12,'LongShots',10,'Marking',2,'OffTheBall',13,'Passing',8,'Penalties',1,'Tackling',2,'Creativity',15,'Anticipation',11,'Decisions',1,'OneOnOnes',12,'Positioning',2,'Reflexes',1,'ThrowIns',1,'FirstTouch',13,'Technique',8,'LeftFoot',2,'RightFoot',2,'Flair',10,'Corners',5,'Teamwork',4,'WorkRate',3,'LongThrows',5,'Acceleration',15,'SetPieces',4,'Strength',8,'Stamina',3,'Pace',12,'Jumping',5,'Influence',2,'Balance',2,'Bravery',2,'Consistency',2,'Aggression',7,'Agility',1,'ImportantMatches',5,'Versatility',1,'NaturalFitness',5,'Determination',5], 1, 339);
-
-    // Best rating, only among positions the player can play
-    var best = 0, bp = -1, T = POS_T;
-    function cand(i, ok) { if (ok && out[i] > best) { best = out[i]; bp = i; } }
-    cand(0, x('Goalkeeper') >= T);
-    cand(1, x('Defender') >= T || x('Sweeper') >= T);
-    cand(2, x('DefensiveMidfielder') >= T);
-    cand(3, x('Midfielder') >= T);
-    cand(4, x('AttackingMidfielder') >= T);
-    cand(5, (x('Midfielder') >= T || x('AttackingMidfielder') >= T || x('WingBack') >= T) && (x('LeftSide') >= T || x('RightSide') >= T));
-    cand(6, x('Attacker') >= T);
-    out[7] = best;
-    return bp;
-  }
-
-  function convert(d, report) {
-    report('Converting Indexes', 0);
-    var nC = d.clubs.length, nN = d.nations.length, nT = d.teams.length, nCo = d.comps.length;
-    var clubs = d.clubs.map(function (c) {
-      return { n: c.n, s: c.s, n1: c.n1, n2: c.n2, uid: c.uid, ct: c.ct, lb: c.lb, nation: inRange(c.nation, nN),
-        teams: c.teams.map(function (t) { return inRange(t, nT); }).filter(function (t) { return t >= 0; }) };
-    });
-    var nations = d.nations.map(function (c) {
-      return { n: c.n, s: c.s, nat: '', uid: c.uid, ct: c.ct, eu: c.eu };
-    });
-    var comps = d.comps.map(function (c) { return { n: c.n, s: c.s, uid: c.uid, nation: inRange(c.nation, nN) }; });
-
-    // person index -> player index
-    var people = d.people, nP = people.length, p2pl = new Int32Array(nP).fill(-1), nPl = 0, j;
-    for (j = 0; j < nP; j++) if (people[j]) p2pl[j] = nPl++;
-
-    var teams = d.teams.map(function (t) {
-      var pl = [];
-      for (var k = 0; k < t.pl.length; k++) { var pi = t.pl[k]; if (pi >= 0 && pi < nP && p2pl[pi] >= 0) pl.push(p2pl[pi]); }
-      return { tt: t.tt, ct: t.ct, c: inRange(t.c, t.ct === 0 ? nC : nN), rep: t.rep, div: inRange(t.div, nCo), pl: pl, uid: t.uid };
-    });
-
-    var attr = new Int8Array(nPl * STRIDE), rating = new Float32Array(nPl * 8), bestPos = new Int8Array(nPl);
-    var converted = new Uint8Array(d.nPlay), players = new Array(nPl), pi = 0;
-    var playBuf = d.playBuf, persBuf = d.persBuf, tmp = new Float64Array(8), pe = [0, 0, 0, 0, 0, 0, 0, 0];
-    var step = Math.max(1, nPl >> 6);
-    function nm(arr, i) { return i >= 0 && i < arr.length ? arr[i] : null; }
-
-    for (j = 0; j < nP; j++) {
-      var p = people[j];
-      if (!p) continue;
-      var o = pi * STRIDE, k;
-      var pld = inRange(p.pld, d.nPlay);
-      if (pld >= 0) {
-        if (!converted[pld]) { convertRelative(playBuf, pld * PD_COUNT, p.ca); converted[pld] = 1; }
-        for (k = 0; k < PD_COUNT; k++) attr[o + k] = playBuf[pld * PD_COUNT + k];
-      }
-      var pdi = inRange(p.pd, d.nPers);
-      for (k = 0; k < PERS_COUNT; k++) { pe[k] = pdi >= 0 ? persBuf[pdi * PERS_COUNT + k] : 0; attr[o + PD_COUNT + k] = pe[k]; }
-      bestPos[pi] = scoutRatings(function (key) { return attr[o + A[key]]; }, pe, p.ca, tmp);
-      for (k = 0; k < 8; k++) rating[pi * 8 + k] = tmp[k];
-
-      var team = inRange(p.team, nT);
-      players[pi] = {
-        i: pi, uid: p.uid,
-        f: nm(d.firstNames, p.f), s: nm(d.secondNames, p.s), c: nm(d.commonNames, p.cn),
-        dob: p.dob, nat: inRange(p.nat, nN), an: p.an.map(function (x) { return inRange(x, nN); }).filter(function (x) { return x >= 0; }),
-        apps: p.apps, goals: p.goals, team: team, joined: p.joined,
-        ca: p.ca, pa: p.pa, hr: p.hr, cr: p.cr, wr: p.wr, val: p.val, sv: p.sv,
-        k: p.k.map(function (c) {
-          var o2 = { t: c.t, ct: c.ct, c: inRange(c.c, c.ct === 0 ? nC : nN), w: c.w, e: c.e, ss: c.ss, ts: c.ts, h: c.h, ps: c.ps, n: c.n };
-          if (c.ft !== undefined) o2.ft = c.ft;
-          if (c.b !== undefined) o2.b = c.b;
-          if (c.cl) o2.cl = c.cl;
-          return o2;
-        })
-      };
-      if (pi % step === 0) report('Calculating Scout Ratings', pi / nPl);
-      pi++;
-    }
-    report('Done', 1);
-    return { game: 'cm4', version: d.version, gameDate: d.gameDate, clubs: clubs, nations: nations, comps: comps, teams: teams,
-      players: players, attr: attr, rating: rating, bestPos: bestPos, counts: { people: nP }, attrKeys: CM4_KEYS, stride: STRIDE };
   }
 
   // ====================================================================
@@ -1190,39 +561,7 @@ var CMParser = (function () {
       attrKeys: CM0102_KEYS, stride: CM0102_STRIDE, counts: { people: nS } };
   }
 
-  // --------------------------------------------------------------------
-  // lang_db.dat: returns uid -> names for clubs, nations and competitions
-  function parseLang(buf, languageId, report) {
-    report = report || function () {};
-    var r = new Reader(buf);
-    var b = r.u8(), w = r.u16(), s = r.ascii(6), v = r.u16();
-    r.skip(1);
-    if (b !== 0 || w !== 46 || s !== 'd\0a\0t\0' || v < 110 || v > 200)
-      throw CorruptError('The lang_db.dat doesn\'t seem to be a valid Language DB for CM4.');
-    var n = r.u8(), offset = -1, first = -1, langs = [];
-    for (var j = 0; j < n; j++) { var id = r.i32(), off = r.i32(); langs.push(id); if (first < 0) first = off; if (id === languageId) offset = off; }
-    // Original falls back to offset 161; prefer the file's first language when the requested one is missing.
-    if (offset < 0) offset = first >= 0 ? first : 161;
-    r.seek(offset + 12);
-    function tbl(fn) { var c = r.count(r.i32()); for (var i = 0; i < c; i++) fn(); }
-    var clubs = {}, nations = {}, comps = {};
-    report('Reading lang_db.dat', 0);
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); });                          // cities
-    tbl(function () { var u = r.i32(), e = {}; e.n = r.ws(); r.skip(1); e.s = r.ws(); r.skip(1); r.skipWs(); r.skip(1); e.n1 = r.ws(); r.skip(1); e.n2 = r.ws(); clubs[u] = e; });
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); r.skipWs(); r.skipWs(); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); var a = r.u8(); for (var i = 0; i < a; i++) r.skipWs(); }); // continents
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); });                          // injuries
-    tbl(function () { var u = r.i32(), e = {}; e.n = r.ws(); r.skip(1); e.s = r.ws(); r.skip(1); r.skipWs(); e.nat = r.ws(); var a = r.u8(); for (var i = 0; i < a; i++) r.skipWs(); nations[u] = e; });
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); });                          // awards
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); });                                                 // stadiums
-    tbl(function () { r.skip(4); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); r.skipWs(); r.skip(1); });   // stages
-    tbl(function () { var u = r.i32(), e = {}; e.n = r.ws(); r.skip(1); e.s = r.ws(); r.skip(1); r.skipWs(); comps[u] = e; });
-    report('Done', 1);
-    return { version: v, languages: langs, usedDefault: langs.indexOf(languageId) < 0, clubs: clubs, nations: nations, comps: comps };
-  }
-
-  var CM4_KEYS = Object.keys(A).sort(function (x, y) { return A[x] - A[y]; }).concat(['Adaptability','Ambition','Loyality','Pressure','Professionalism','Sportsmanship','Temperament','Controversy']);
-  return { parseSave: parseSave, parseCM4: parseCM4, parseCM0102: parseCM0102, parseLang: parseLang, PD_COUNT: PD_COUNT, PERS_COUNT: PERS_COUNT, STRIDE: STRIDE, A: A,
-    CM4_KEYS: CM4_KEYS, CM0102_KEYS: CM0102_KEYS, CM0102_RATINGS: CM0102_RATINGS };
+  return { parseSave: parseSave, CM0102_KEYS: CM0102_KEYS, CM0102_RATINGS: CM0102_RATINGS };
 })();
 </script>
 
@@ -1231,37 +570,27 @@ var CMParser = (function () {
 'use strict';
 var $ = function (s, el) { return (el || document).querySelector(s); };
 var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
-var A = CMParser.A, PD = CMParser.PD_COUNT, STRIDE = CMParser.STRIDE, POS_T = 15;
-var PERS = { Adaptability: 0, Ambition: 1, Loyality: 2, Pressure: 3, Professionalism: 4, Sportsmanship: 5, Temperament: 6, Controversy: 7 };
 var LS_KEY = 'cmscout.v1';
-var LANGS = [['English', 8], ['Dutch', 7], ['French', 10], ['German', 11], ['Italian', 15], ['Polish', 18], ['Portuguese', 19], ['Norwegian', 22], ['Spanish', 24], ['Swedish', 30], ['Danish', 32]];
 
 // ======================================================================
 // State
 // ======================================================================
 var DB = null;            // parsed save (see CMParser.convert)
-var LANG = null;          // parsed lang_db names {clubs, nations, comps}
 var view = { list: [], mode: 'none', title: 'Players', sel: -1 };
 var settings = loadSettings();
 var uidIndex = null;
 
 function defaultSettings() {
-  return { langId: 8, useLang: true, cacheGame: true, theme: '', panel: true, interested: false, lastGame: 'cm4', games: {} };
+  return { cacheGame: true, theme: '', panel: true, interested: false, games: {} };
 }
 function loadSettings() {
   var s = defaultSettings();
   try { var raw = localStorage.getItem(LS_KEY); if (raw) Object.assign(s, JSON.parse(raw)); } catch (e) { /* storage unavailable */ }
-  // v1 kept one set of columns/filters/presets/stars; they belonged to CM4 / CM 03-04
-  if (s.columns || s.filters || s.presets || s.stars) {
-    s.games.cm4 = s.games.cm4 || { columns: s.columns || null, sort: s.sort || null, filters: s.filters || {}, presets: s.presets || {}, stars: s.stars || {} };
-    delete s.columns; delete s.sort; delete s.filters; delete s.presets; delete s.stars;
-  }
   return s;
 }
-// The game whose save is loaded (or was loaded last); everything game-specific hangs off it.
-function G() { return DB ? (DB.game || 'cm4') : (settings.lastGame || 'cm4'); }
-function P() { return PROFILES[G()]; }
-// Per-game settings: columns, sort, current filters, saved searches and stars.
+function G() { return 'cm0102'; }
+function P() { return GAME; }
+// Columns, sort, current filters, saved searches and stars (kept under games.cm0102).
 function gs() {
   var g = settings.games[G()];
   if (!g) g = settings.games[G()] = {};
@@ -1311,14 +640,12 @@ var idb = (function () {
 })();
 
 // ======================================================================
-// Model helpers (ports of TCM4Person getters)
+// Model helpers
 // ======================================================================
 function dParts(p) { return { y: Math.floor(p / 1000), d: p % 1000 }; }
 function dayNum(p) { var x = dParts(p); return Date.UTC(x.y, 0, 1 + x.d) / 86400000; }
 function fmtDate(p) { var t = new Date(dayNum(p) * 86400000); return pad(t.getUTCDate()) + '.' + pad(t.getUTCMonth() + 1) + '.' + t.getUTCFullYear(); }
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
-function monthToMonth(p) { return p === 1900001; }
-function oneYear(p) { return p + 1000; }
 function age(p, today) { var g = dParts(today || DB.gameDate), b = dParts(p.dob); return g.y - b.y - (g.d < b.d ? 1 : 0); } // CMAge
 function thousands(n) { return Math.round(n).toLocaleString('en-GB'); }
 function money(n) { return '£' + thousands(n); }
@@ -1344,132 +671,16 @@ function displayName(p) {
   return r;
 }
 function fullName(p) { return (p.f !== null ? p.f + ' ' : '') + (p.s !== null ? p.s : ''); }
-function nationsText(p) {
-  var parts = []; var n = nation(p.nat); if (n) parts.push(n.s);
-  p.an.forEach(function (i) { parts.push(DB.nations[i].s); });
-  return parts.join(' / ');
-}
-function clubName(p) { var c = teamContainer(team(p)); return c ? c.s : ''; }
-function isEU(p) { var n = nation(p.nat); if (n && n.eu) return true; return p.an.some(function (i) { return DB.nations[i].eu; }); }
-function fromNation(p, ni) { return p.nat === ni || p.an.indexOf(ni) >= 0; }
-function basedIdx(p) {
-  var t = team(p);
-  if (t) { var c = teamContainer(t); if (c && c.ct === 0 && t.ct === 0 && c.nation >= 0) return c.nation; return -1; }
-  return p.nat;
-}
-function divisionIdx(p) { var t = team(p); return t ? t.div : -1; }
-function fullContract(p) { for (var j = 0; j < p.k.length; j++) if (p.k[j].t === 0 && p.k[j].ct === 0) return p.k[j]; return null; }
-function clubContractList(p) { for (var j = 0; j < p.k.length; j++) if (p.k[j].ct === 0) return p.k[j]; return null; }
-function personClubContract(p) {
-  var t = team(p), r = null; if (!t) return null;
-  for (var j = 0; j < p.k.length; j++) if (p.k[j].ct === t.ct && p.k[j].c === t.c && t.c >= 0) r = p.k[j];
-  return r;
-}
-function contractTypeName(c) { return c.t === 0 || c.t === 5 ? (c.t === 5 ? 'League Contract' : c.ft ? 'Full Time' : 'Part Time') : c.t === 1 ? 'Loan Contract' : 'Trial Contract'; }
-function contractType(p) { var c = fullContract(p) || clubContractList(p); return c ? contractTypeName(c) : ''; }
-var SQ = { 0: '-', 1: 'Key Player', 2: 'First Team', 3: 'Rotation', 4: 'Backup', 5: 'Hot Prospect', 6: 'Youngster', 7: 'Not Needed' };
-var SQ_LONG = { 0: 'Unspecified', 1: 'Indispensable to the club', 2: 'Important first team player', 3: 'Squad rotation system', 4: 'Backup to the first team', 5: 'Hot prospect for the future', 6: 'Decent young player', 7: 'Not needed by the club' };
-function squadStatus(p) { var c = fullContract(p) || clubContractList(p); return c ? (SQ[c.ss] || '') : ''; }
-function perceivedStatus(p) { var c = fullContract(p) || clubContractList(p); return c ? (SQ[c.ps] || '') : ''; }
-function transferText(ts) { return ts & 1 ? 'Transfer Listed By Club' : ts & 2 ? 'Listed For Loan' : ts & 8 ? 'Transfer Listed By Request' : ts & 16 ? 'Unavailable' : ''; }
-function transferStatus(p) { var c = fullContract(p); return c ? transferText(c.ts) : ''; }
-function contractEnds(p) { var c = fullContract(p); return c ? c.e : 1900000; }
-function wage(p) { var c = fullContract(p); return c ? c.w : 0; }
-function clause(p, types) { var c = fullContract(p), r = null; if (c) c.cl.forEach(function (x) { if (types.indexOf(x[0]) >= 0) r = x; }); return r; }
-function minFeeClause(p) { return clause(p, [0]); }
-function relegClause(p) { return clause(p, [1, 9]); }
-function nonPromoClause(p) { return clause(p, [2, 10]); }
-function happiness(p) { var c = fullContract(p) || clubContractList(p); return c ? c.h : 0; }
-function squadRep(p) { var t = team(p); return t ? t.rep : 0; }
-function bosman(p) { var c = fullContract(p); return c ? c.b : false; }
 
-function position(p) {
-  var T = POS_T, side = '', pos = '';
-  if (at(p, 'RightSide') >= T) side = 'R';
-  if (at(p, 'LeftSide') >= T) side += 'L';
-  if (at(p, 'Central') >= T) side += 'C';
-  if (at(p, 'Goalkeeper') >= T) pos = 'GK';
-  else {
-    var add = function (x) { pos = pos ? pos + '/' + x : x; };
-    var dm = at(p, 'DefensiveMidfielder') >= T, am = at(p, 'AttackingMidfielder') >= T, m = at(p, 'Midfielder') >= T, a = at(p, 'Attacker') >= T;
-    if (at(p, 'Sweeper') >= T) add('SW');
-    if (at(p, 'Defender') >= T) add('D');
-    if (dm) add('DM');
-    if (m && !dm && !am) add('M');
-    if (am && !dm && (!a || (a && m))) add('AM');
-    if (a) add(at(p, 'LeftSide') >= T || at(p, 'RightSide') >= T || at(p, 'FreeRole') >= T || am ? 'F' : 'S');
-  }
-  return (pos + ' ' + side).trim();
-}
-function longPosition(p) {
-  var T = POS_T, sides = [], pos = '';
-  if (at(p, 'RightSide') >= T) sides.push('Right');
-  if (at(p, 'LeftSide') >= T) sides.push('Left');
-  if (at(p, 'Central') >= T) sides.push('Centre');
-  if (at(p, 'Goalkeeper') >= T) pos = 'Goalkeeper';
-  else {
-    var add = function (x) { pos = pos ? pos + '/' + x : x; };
-    var dm = at(p, 'DefensiveMidfielder') >= T, am = at(p, 'AttackingMidfielder') >= T, m = at(p, 'Midfielder') >= T, a = at(p, 'Attacker') >= T;
-    if (at(p, 'Sweeper') >= T) add('Sweeper');
-    if (at(p, 'Defender') >= T) add('Defender');
-    if (dm) add('Defensive Midfielder');
-    if (m && !dm && !am) add('Midfielder');
-    if (am && !dm && (!a || (a && m))) add('Attacking Midfielder');
-    if (a) add(at(p, 'LeftSide') >= T || at(p, 'RightSide') >= T || at(p, 'FreeRole') >= T || am ? 'Forward' : 'Striker');
-  }
-  return pos + (sides.length ? ' (' + sides.join('/') + ')' : '');
-}
-var RATING_POS = ['GK', 'D', 'DM', 'M', 'AM', 'W', 'A'];
 function bestRating(p) { return DB.rating[p.i * 8 + 7]; }
-function bestRatingText(p) { var b = DB.bestPos[p.i]; return bestRating(p).toFixed(2) + ' % (' + (b >= 0 ? RATING_POS[b] : '?') + ')'; }
 
 // ======================================================================
 // Columns (same set and order as the original list view)
 // ======================================================================
-var CM4_ATTRS = ['Acceleration','Adaptability','AerialAbility','Aggression','Agility','Ambition','Anticipation','Balance','Bravery','CommandOfArea','Communication','Consistency','Controversy','Corners','Creativity','Crossing','Decisions','Determination','Dirtiness','Dribbling','Eccentricity','Finishing','FirstTouch','Flair','Handling','Heading','ImportantMatches','Influence','InjuryProneness','Jumping','Kicking','LongShots','LongThrows','Loyality','Marking','NaturalFitness','OffTheBall','OneOnOnes','Pace','Passing','Penalties','Positioning','Pressure','Professionalism','Reflexes','RushingOut','SetPieces','Sportsmanship','Stamina','Strength','Tackling','Teamwork','Technique','Temperament','TendencyToPunch','ThrowIns','Throwing','Versatility','WorkRate','LeftFoot','RightFoot'];
 var POS_COLS = ['Goalkeeper','Sweeper','Defender','DefensiveMidfielder','Midfielder','AttackingMidfielder','Attacker','WingBack','FreeRole','RightSide','LeftSide','Central'];
-// Attributes that are hidden in the game (shown grey in the attribute filter)
-var CM4_HIDDEN = ['Adaptability','Ambition','Loyality','Pressure','Professionalism','Sportsmanship','Temperament','Controversy','FirstTouch','ThrowIns','Consistency','Corners','Dirtiness','ImportantMatches','InjuryProneness','NaturalFitness','Versatility','LeftFoot','RightFoot','Eccentricity','RushingOut','TendencyToPunch'];
-var INVERSE_ATTRS = ['Dirtiness', 'InjuryProneness', 'Controversy', 'Eccentricity', 'TendencyToPunch']; // high = bad
-function humanize(k) { return k.replace(/([a-z])([A-Z])/g, '$1 $2').replace('Of ', 'of ').replace('On Ones', 'on Ones').replace(/^Throw Ins$/, 'Throw Ins'); }
+function humanize(k) { return k.replace(/([a-z])([A-Z])/g, '$1 $2').replace('Of ', 'of ').replace('On Ones', 'on Ones'); }
 function yesNo(b) { return b ? 'Yes' : 'No'; }
 
-var CM4_COLUMNS = [
-  { id: 'name', t: 'Name', k: 's', w: 170, v: listName },
-  { id: 'nation', t: 'Nation', k: 's', w: 110, v: nationsText },
-  { id: 'club', t: 'Club', k: 's', w: 140, v: clubName },
-  { id: 'pos', t: 'Position', k: 's', w: 90, v: position },
-  { id: 'ca', t: 'Ability', k: 'i', w: 58, v: function (p) { return p.ca; } },
-  { id: 'pa', t: 'Pot Ability', k: 'i', w: 70, v: function (p) { return p.pa; } },
-  { id: 'age', t: 'Age', k: 'i', w: 44, v: age },
-  { id: 'value', t: 'Value', k: 'm', w: 92, v: function (p) { return p.val; } },
-  { id: 'saleValue', t: 'Sale Value', k: 'm', w: 92, v: function (p) { return p.sv; } },
-  { id: 'sr', t: 'Scout Rating', k: 'r', w: 104, v: bestRating },
-  { id: 'dob', t: 'Date Of Birth', k: 'd', w: 90, v: function (p) { return p.dob; } },
-  { id: 'eu', t: 'EU Member', k: 's', w: 70, v: function (p) { return yesNo(isEU(p)); } },
-  { id: 'caps', t: 'Caps', k: 'i', w: 50, v: function (p) { return p.apps; } },
-  { id: 'intGoals', t: 'Int Goals', k: 'i', w: 62, v: function (p) { return p.goals; } },
-  { id: 'based', t: 'Based', k: 's', w: 100, v: function (p) { var n = nation(basedIdx(p)); return n ? n.s : ''; } },
-  { id: 'division', t: 'Division', k: 's', w: 130, v: function (p) { var d = divisionIdx(p); return d >= 0 ? DB.comps[d].s : ''; } },
-  { id: 'squad', t: 'Squad', k: 's', w: 140, v: function (p) { return squadNameOf(team(p)); } },
-  { id: 'squadRep', t: 'Squad Rep', k: 'i', w: 70, v: squadRep },
-  { id: 'contractType', t: 'Contract Type', k: 's', w: 100, v: contractType },
-  { id: 'wage', t: 'Wage', k: 'm', w: 80, v: wage },
-  { id: 'joined', t: 'Joined Club', k: 'd', w: 90, v: function (p) { return p.joined; } },
-  { id: 'contractEnd', t: 'Contract End', k: 'd', w: 90, v: contractEnds },
-  { id: 'bosman', t: 'Leaving On Bosman', k: 's', w: 70, v: function (p) { return yesNo(bosman(p)); } },
-  { id: 'minFee', t: 'Minimum Fee', k: 'm', w: 92, v: function (p) { var c = minFeeClause(p); return c ? c[1] : 0; } },
-  { id: 'relegFee', t: 'Relegation Fee', k: 'm', w: 92, v: function (p) { var c = relegClause(p); return c ? c[1] : 0; } },
-  { id: 'nonPromoFee', t: 'Non Promotion Fee', k: 'm', w: 92, v: function (p) { var c = nonPromoClause(p); return c ? c[1] : 0; } },
-  { id: 'squadStatus', t: 'Squad Status', k: 's', w: 96, v: squadStatus },
-  { id: 'perceived', t: 'Perceived Squad Status', k: 's', w: 96, v: perceivedStatus },
-  { id: 'transfer', t: 'Transfer Status', k: 's', w: 140, v: transferStatus },
-  { id: 'happiness', t: 'Happiness Level', k: 'i', w: 64, v: happiness },
-  { id: 'homeRep', t: 'Home Rep', k: 'i', w: 64, v: function (p) { return p.hr; } },
-  { id: 'curRep', t: 'Current Rep', k: 'i', w: 64, v: function (p) { return p.cr; } },
-  { id: 'worldRep', t: 'World Rep', k: 'i', w: 64, v: function (p) { return p.wr; } }
-].concat(POS_COLS.map(function (k) { return { id: 'p_' + k, t: humanize(k), k: 'i', w: 52, v: function (p) { return at(p, k); }, attr: k }; }))
- .concat(CM4_ATTRS.map(function (k) { return { id: 'a_' + k, t: humanize(k), k: 'i', w: 52, v: function (p) { return at(p, k); }, attr: k }; }));
 function defaultColumns() { var pr = P(); return { order: pr.columns.map(function (c) { return c.id; }), visible: pr.defaultVisible.slice(), widths: {} }; }
 function normalizeColumns(cs) { // columns added in later versions go at the end
   var pr = P();
@@ -1708,31 +919,19 @@ function plsBytes(list, interested) {
 }
 
 // ======================================================================
-// Per-game profiles
+// Game definition: columns, filters, player view and export
 // ======================================================================
 function indexCols(cols) { var m = {}; cols.forEach(function (c) { m[c.id] = c; }); return m; }
-var PROFILES = {
-  cm4: {
-    name: 'CM4 / CM 03/04', columns: CM4_COLUMNS, byId: indexCols(CM4_COLUMNS), defaultVisible: CM4_COLUMNS.slice(0, 10).map(function (c) { return c.id; }),
-    attrs: CM4_ATTRS, hidden: CM4_HIDDEN, inverse: ['Dirtiness', 'InjuryProneness', 'Controversy', 'Eccentricity', 'TendencyToPunch'], label: humanize,
-    chain: cm4Chain, ratingText: bestRatingText, renderPlayer: renderPlayerCM4,
-    transferOptions: ['Transfer Listed', 'Listed For Loan'],
-    squadOptions: ['Not Yet Set', 'Indispensable To The Club', 'Important First Team Player', 'Used In A Squad Rotation System', 'Backup For The First Team', 'Hot Prospect For The Future', 'Decent Young Player', 'Not Needed By The Club'],
-    contractTypeOptions: ['Part Time Contract', 'Full Time Contract', 'Trial Contract'],
-    exportLabel: 'Export shortlist', exportTitle: 'Export the current list as a .slf shortlist the game can open',
-    exportList: exportSlf
-  },
-  cm0102: {
-    name: 'CM 01/02', columns: C2_COLUMNS, byId: indexCols(C2_COLUMNS), defaultVisible: ['name', 'nation', 'club', 'pos', 'ca', 'pa', 'age', 'value', 'sr'],
-    attrs: C2_ATTRS, hidden: C2_HIDDEN, inverse: ['Dirtiness', 'InjuryProneness'], label: c2Label,
-    chain: c2Chain, ratingText: c2RatingText, renderPlayer: renderPlayerC2,
-    transferOptions: ['Transfer Listed By Club', 'Transfer Listed By Request', 'Listed For Loan'],
-    squadOptions: C2_SQUAD, contractTypeOptions: C2_CONTRACT_TYPES.map(function (x) { return x[0]; }),
-    exportLabel: 'Export scout list', exportTitle: 'Export the current list as a .pls scout list for the game\'s Search folder',
-    exportList: function (list, title) {
-      download(plsBytes(list, settings.interested), title + '.pls', 'application/octet-stream');
-      status('Exported ' + list.length + ' players. Put the .pls in the game\'s "Search" folder to load it in game.');
-    }
+var GAME = {
+  name: 'CM 01/02', columns: C2_COLUMNS, byId: indexCols(C2_COLUMNS), defaultVisible: ['name', 'nation', 'club', 'pos', 'ca', 'pa', 'age', 'value', 'sr'],
+  attrs: C2_ATTRS, hidden: C2_HIDDEN, inverse: ['Dirtiness', 'InjuryProneness'], label: c2Label,
+  chain: c2Chain, ratingText: c2RatingText, renderPlayer: renderPlayerC2,
+  transferOptions: ['Transfer Listed By Club', 'Transfer Listed By Request', 'Listed For Loan'],
+  squadOptions: C2_SQUAD, contractTypeOptions: C2_CONTRACT_TYPES.map(function (x) { return x[0]; }),
+  exportLabel: 'Export scout list', exportTitle: 'Export the current list as a .pls scout list for the game\'s Search folder',
+  exportList: function (list, title) {
+    download(plsBytes(list, settings.interested), title + '.pls', 'application/octet-stream');
+    status('Exported ' + list.length + ' players. Put the .pls in the game\'s "Search" folder to load it in game.');
   }
 };
 function visibleColumns() { var vis = gs().columns.visible; return gs().columns.order.filter(function (id) { return vis.indexOf(id) >= 0; }).map(colById); }
@@ -1750,77 +949,11 @@ function cellText(c, p) {
 // ======================================================================
 // Filters (port of CMFilter.pas, same order). Empty bound = unbounded.
 // ======================================================================
-var RANGES = ['age', 'caps', 'intGoals', 'ca', 'pa', 'sr', 'homeRep', 'curRep', 'worldRep', 'squadRep', 'clubRep', 'fee', 'value', 'saleValue', 'wage'];
+var RANGES = ['age', 'caps', 'intGoals', 'ca', 'pa', 'sr', 'homeRep', 'curRep', 'worldRep', 'clubRep', 'fee', 'value', 'wage'];
 function num(x) { return x === '' || x === null || x === undefined || isNaN(+x) ? null : +x; }
 function out(v, lo, hi) { return (lo !== null && v < lo) || (hi !== null && v > hi); }
 function fold(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 
-function cm4Chain(f) {
-  var chain = [], gd = DB.gameDate, gdDay = dayNum(gd), gdOne = dayNum(oneYear(gd));
-  function rng(key, get) { var r = f[key] || [], lo = num(r[0]), hi = num(r[1]); if (lo !== null || hi !== null) chain.push(function (p) { return out(get(p), lo, hi); }); }
-  if (f.name && f.name.trim()) {
-    var q = fold(f.name.trim());
-    chain.push(function (p) { return fold(fullName(p)).indexOf(q) < 0 && (p.c === null || fold(p.c).indexOf(q) < 0); });
-  }
-  rng('age', age);
-  if (f.nation !== undefined && f.nation !== '') { var ni = byUid(DB.nations, +f.nation); chain.push(function (p) { return !fromNation(p, ni); }); }
-  if (f.eu) chain.push(function (p) { return !isEU(p); });
-  if (f.based !== undefined && f.based !== '') { var bi = byUid(DB.nations, +f.based); chain.push(function (p) { return basedIdx(p) !== bi; }); }
-  if (f.division !== undefined && f.division !== '') { var di = byUid(DB.comps, +f.division); chain.push(function (p) { return divisionIdx(p) !== di; }); }
-  rng('ca', function (p) { return p.ca; });
-  rng('pa', function (p) { return p.pa; });
-  rng('sr', bestRating);
-  POS_COLS.forEach(function (k) { if (f.pos && f.pos[k]) chain.push(function (p) { return at(p, k) < POS_T; }); });
-  rng('homeRep', function (p) { return p.hr; });
-  rng('curRep', function (p) { return p.cr; });
-  rng('worldRep', function (p) { return p.wr; });
-  rng('squadRep', squadRep);
-  if (f.contract !== undefined && f.contract !== '') {
-    var ct = +f.contract;
-    chain.push(function (p) {
-      var c = fullContract(p);
-      switch (ct) {
-        case 0: return p.team >= 0;
-        case 1: return c ? dayNum(c.e) > gdDay : true;
-        case 2: return c ? dayNum(c.e) > gdOne : true;
-        case 3: return c ? (age(p) > 16 && !monthToMonth(c.e)) : true;
-      }
-      return true;
-    });
-  }
-  if (f.bosman) chain.push(function (p) { var c = fullContract(p); return !(c && c.b) || dayNum(c.e) > gdOne; });
-  var fr = f.fee || [], flo = num(fr[0]), fhi = num(fr[1]), feeSet = flo !== null || fhi !== null;
-  if (f.nonPromo) chain.push(function (p) { var c = nonPromoClause(p); if (!c) return true; if (f.nonPromoActive && c[0] !== 10) return true; return feeSet && out(c[1], flo, fhi); });
-  if (f.releg) chain.push(function (p) { var c = relegClause(p); if (!c) return true; if (f.relegActive && c[0] !== 9) return true; return feeSet && out(c[1], flo, fhi); });
-  if (f.minFee) chain.push(function (p) { var c = minFeeClause(p); if (!c) return true; return feeSet && out(c[1], flo, fhi); });
-  if (f.transfer !== undefined && f.transfer !== '') {
-    var tsel = +f.transfer;
-    chain.push(function (p) { var c = fullContract(p); if (!c) return true; return tsel === 0 ? !((c.ts & 1) || (c.ts & 8)) : !(c.ts & 2); });
-  }
-  if (f.squadStatus !== undefined && f.squadStatus !== '') { var ss = +f.squadStatus; chain.push(function (p) { var c = fullContract(p); return c ? c.ss !== ss : true; }); }
-  if (f.contractType !== undefined && f.contractType !== '') {
-    var cty = +f.contractType;
-    chain.push(function (p) {
-      var c = fullContract(p);
-      if (cty === 0) return c ? c.ft : true;
-      if (cty === 1) return c ? !c.ft : true;
-      if (c) return true;
-      var cc = clubContractList(p); return cc ? cc.t !== 2 : true;
-    });
-  }
-  rng('value', function (p) { return p.val; });
-  rng('saleValue', function (p) { return p.sv; });
-  var wr = f.wage || [], wlo = num(wr[0]), whi = num(wr[1]);
-  if (wlo !== null || whi !== null) chain.push(function (p) { var c = fullContract(p); return c ? out(c.w, wlo, whi) : true; });
-  CM4_ATTRS.forEach(function (k) {
-    var r = (f.attrs || {})[k]; if (!r) return;
-    var lo = num(r[0]), hi = num(r[1]);
-    if (lo !== null || hi !== null) chain.push(function (p) { return out(at(p, k), lo, hi); });
-  });
-  rng('caps', function (p) { return p.apps; });
-  rng('intGoals', function (p) { return p.goals; });
-  return chain;
-}
 function byUid(arr, uid) { for (var j = 0; j < arr.length; j++) if (arr[j].uid === uid) return j; return -2; }
 function runSearch() {
   if (!DB) return;
@@ -1835,9 +968,8 @@ function countActive(f) {
   var n = 0;
   if (f.name && f.name.trim()) n++;
   ['nation', 'based', 'division', 'contract', 'transfer', 'squadStatus', 'contractType'].forEach(function (k) { if (f[k] !== undefined && f[k] !== '') n++; });
-  ['eu', 'bosman', 'nonPromo', 'releg', 'minFee'].concat(G() === 'cm0102' ? ['transferArranged', 'nonPlaying'] : []).forEach(function (k) { if (f[k]) n++; });
-  var only = G() === 'cm0102' ? ['squadRep', 'saleValue'] : ['clubRep'];
-  RANGES.forEach(function (k) { if ((k !== 'fee' || G() === 'cm0102') && only.indexOf(k) < 0 && f[k] && (num(f[k][0]) !== null || num(f[k][1]) !== null)) n++; });
+  ['eu', 'bosman', 'nonPromo', 'releg', 'minFee', 'transferArranged', 'nonPlaying'].forEach(function (k) { if (f[k]) n++; });
+  RANGES.forEach(function (k) { if (f[k] && (num(f[k][0]) !== null || num(f[k][1]) !== null)) n++; });
   Object.keys(f.pos || {}).forEach(function (k) { if (f.pos[k]) n++; });
   Object.keys(f.attrs || {}).forEach(function (k) { var r = f.attrs[k]; if (num(r[0]) !== null || num(r[1]) !== null) n++; });
   return n;
@@ -1861,10 +993,8 @@ function buildAttrGrid() {
 function setOptions(sel, labels) {
   $(sel).innerHTML = '<option value="">Any</option>' + labels.map(function (l, i) { return '<option value="' + i + '">' + esc(l) + '</option>'; }).join('');
 }
-// Switch everything game-specific to the profile of the loaded (or last loaded) game.
 function applyGameUI() {
-  var g = G(), pr = P();
-  $$('[data-only]').forEach(function (el) { el.hidden = el.dataset.only !== g; });
+  var pr = P();
   setOptions('#f_transfer', pr.transferOptions);
   setOptions('#f_squadStatus', pr.squadOptions);
   setOptions('#f_contractType', pr.contractTypeOptions);
@@ -2089,85 +1219,6 @@ function renderPlayer() {
   $('#piStar').textContent = gs().stars[p.uid] ? '★' : '☆';
   $('#piPrev').disabled = piIdx <= 0; $('#piNext').disabled = piIdx >= piList.length - 1;
 }
-function renderPlayerCM4(p) {
-  var t = team(p), pcc = personClubContract(p), fc = fullContract(p), a = age(p);
-  var title = [], sub = [];
-  if (pcc && pcc.n > 0) title.push(pcc.n + '.');
-  title.push(displayName(p));
-  if (t) title.push('(' + squadNameOf(t) + ')');
-  $('#piTitle').textContent = title.join(' ');
-  var nat = nation(p.nat), s = longPosition(p);
-  if (nat) s += ', ' + (nat.nat || nat.s);
-  if (p.apps > 0) s += ' (' + p.apps + ' cap' + (p.apps > 1 ? 's' : '') + (p.goals > 0 ? '/' + p.goals + ' goal' + (p.goals > 1 ? 's' : '') : '') + ')';
-  s += ', Age ' + a;
-  $('#piSub').textContent = s;
-  var flags = [];
-  if (pcc && pcc.t === 1 && fc) { var fcc = container(fc.ct, fc.c); flags.push('<span>On loan from ' + esc(fcc ? fcc.s : '?') + '</span>'); }
-  if (fc && (a < 17 || monthToMonth(fc.e))) flags.push('<span class="warn">Contract is not protected</span>');
-  var lf = at(p, 'LeftFoot'), rf = at(p, 'RightFoot');
-  var foot = lf > 13 && rf > 13 ? 'Either' : lf > 13 ? (rf < 8 ? 'Left Only' : 'Left') : (lf < 8 ? 'Right Only' : 'Right');
-  flags.push('<span>Preferred foot: ' + foot + '</span>');
-  flags.push('<span>Best: ' + esc(bestRatingText(p)) + '</span>');
-
-  var gk = at(p, 'Goalkeeper') >= POS_T;
-  var tech = ['Crossing','Dribbling','Finishing','Heading','LongShots','LongThrows','Marking','Passing','Penalties','SetPieces','Tackling','Technique'];
-  var gkk = ['AerialAbility','CommandOfArea','Communication','Eccentricity','Handling','Kicking','OneOnOnes','Reflexes','RushingOut','TendencyToPunch','Throwing'];
-  var mental = ['Aggression','Anticipation','Bravery','Creativity','Decisions','Determination','Flair','Influence','OffTheBall','Positioning','Teamwork','WorkRate'];
-  var phys = ['Acceleration','Agility','Balance','Jumping','Pace','Stamina','Strength'];
-  var hidden = ['FirstTouch','ThrowIns','Consistency','Corners','Dirtiness','ImportantMatches','InjuryProneness','NaturalFitness','Versatility','LeftFoot','RightFoot'];
-  var persona = ['Adaptability','Ambition','Controversy','Loyality','Pressure','Professionalism','Sportsmanship','Temperament'];
-  var techLabels = tech.map(function (k) { return k === 'Penalties' ? 'Penalty Taking' : null; });
-
-  var html = '<div class="pi-flags">' + flags.join('') + '</div><div class="pi-grid">';
-  html += gk ? attrBox('Goalkeeping', p, gkk) : attrBox('Technical', p, tech, techLabels);
-  html += attrBox('Mental', p, mental) + attrBox('Physical', p, phys);
-  html += gk ? attrBox('Technical (hidden for GK)', p, tech, techLabels) : attrBox('Goalkeeping (hidden)', p, gkk);
-  html += attrBox('Hidden attributes', p, hidden) + attrBox('Personality (hidden)', p, persona) + attrBox('Positions', p, POS_COLS);
-  html += '<div class="pi-box"><h4>Ability &amp; reputation</h4>' + kv('Current Ability', p.ca) + kv('Potential Ability', p.pa) + kv('Home Reputation', p.hr) + kv('Current Reputation', p.cr) + kv('World Reputation', p.wr) + '</div>';
-  var R = DB.rating, o = p.i * 8;
-  html += '<div class="pi-box"><h4>Scout rating</h4>' + ['Goalkeeper', 'Defender', 'Defensive Midfielder', 'Midfielder', 'Attacking Midfielder', 'Winger', 'Attacker'].map(function (n, i) {
-    return kv(n, R[o + i].toFixed(2) + ' %', DB.bestPos[p.i] === i ? 'a-hi' : '');
-  }).join('') + '</div>';
-
-  // Overview
-  html += '<div class="pi-box"><h4>Overview</h4>';
-  if (p.c !== null) html += kv('Full Name', esc(fullName(p)));
-  html += kv('Date Of Birth', fmtDate(p.dob)) + kv('Value', money(p.val)) + kv('Sale Value', money(p.sv));
-  if (fc) {
-    var ts = fc.ts;
-    if (ts !== 0 && ts !== 4 && ts !== 32) {
-      if (ts & 1) html += kv('Availability', 'Transfer Listed By Club');
-      if (ts & 2) html += kv('Availability', 'Listed For Loan');
-      if (ts & 8) html += kv('Availability', 'Transfer Listed By Request');
-      if (ts & 16) html += kv('Availability', 'Unavailable For Transfer');
-      if (ts & 64) html += kv('Availability', 'Unavailable For Loan');
-    } else html += kv('Availability', 'Unknown');
-  } else html += kv('Availability', 'Unknown');
-  p.an.forEach(function (i) { var n = DB.nations[i]; html += kv('Other Nationality', esc(n.nat || n.s)); });
-  html += kv('Joined Club', fmtDate(p.joined)) + kv('Happiness', happiness(p)) + kv('Unique ID', p.uid);
-  html += '</div>';
-
-  // Contracts
-  var boxes = p.k.filter(function (c) { return c.ct === 0; }).map(function (c) {
-    var cont = container(c.ct, c.c), typ;
-    if (c.t === 0) { typ = a < 17 ? 'Youth Contract' : (c.ft ? 'Full Time' : 'Part Time') + (monthToMonth(c.e) ? ' Month To Month Contract' : ' Contract'); }
-    else if (c.t === 1) typ = 'Loan Contract'; else if (c.t === 2) typ = 'Trial Contract'; else typ = 'League Contract';
-    var b = '<div class="pi-box"><h4>' + esc(cont ? cont.s : 'Unknown club') + '</h4>' + kv('Type', typ) + kv('Wages', money(c.w) + ' <span class="dim">p/w</span>') +
-      kv('Expires', monthToMonth(c.e) ? 'N/A' : fmtDate(c.e)) + kv('Squad Status', SQ_LONG[c.ss] || '-') + kv('Perceived Status', SQ_LONG[c.ps] || '-');
-    if (c.n > 0) b += kv('Squad Number', c.n);
-    if (c.t === 0) {
-      if (c.b) b += kv('Leaving On Bosman', 'Yes');
-      var mf = clause(p, [0]), rl = clause(p, [1, 9]), np = clause(p, [2, 10]);
-      if (mf) b += kv('Minimum Fee', money(mf[1]));
-      if (rl) b += kv('Relegation Fee', money(rl[1]) + (rl[0] === 9 ? ' <span class="dim">(active)</span>' : ''));
-      if (np) b += kv('Non Promotion Fee', money(np[1]) + (np[0] === 10 ? ' <span class="dim">(active)</span>' : ''));
-    }
-    return b + '</div>';
-  });
-  html += '<div class="pi-box pi-wide"><h4>Contract details</h4>' + (boxes.length ? '<div class="contracts">' + boxes.join('') + '</div>' : '<span class="note">No club contract</span>') + '</div>';
-  html += '</div>';
-  $('#piBody').innerHTML = html;
-}
 $('#piPrev').addEventListener('click', function () { if (piIdx > 0) { piIdx--; selectRow(piIdx, true); renderPlayer(); } });
 $('#piNext').addEventListener('click', function () { if (piIdx < piList.length - 1) { piIdx++; selectRow(piIdx, true); renderPlayer(); } });
 $('#piStar').addEventListener('click', function () { toggleStar(piList[piIdx]); });
@@ -2223,20 +1274,8 @@ dlgTeam.addEventListener('close', function () {
 });
 
 // ======================================================================
-// Shortlist files (.slf)
+// Exports (.pls scout list, CSV)
 // ======================================================================
-var SL_HEADER = [0, 46, 0, 115, 0, 108, 0, 102, 0, 1, 0, 0];
-$('#fileSl').addEventListener('change', function () {
-  var f = this.files[0]; this.value = ''; if (!f) return;
-  f.arrayBuffer().then(function (buf) {
-    var b = new Uint8Array(buf), dv = new DataView(buf);
-    if (b.length < 16 || SL_HEADER.some(function (x, i) { return b[i] !== x; })) throw new Error('The file doesn\'t seem to be a valid Shortlist file.');
-    var n = dv.getInt32(12, true), idx = getUidIndex(), list = [], missing = 0;
-    for (var j = 0; j < n && 16 + j * 4 + 4 <= b.length; j++) { var i = idx.get(dv.getInt32(16 + j * 4, true)); if (i !== undefined) list.push(DB.players[i]); else missing++; }
-    setView(list, 'shortlist', 'Shortlist: ' + f.name.replace(/\.slf$/i, ''));
-    status(missing ? missing + ' shortlist entries are not players in this game' : 'Shortlist loaded');
-  }).catch(showError);
-});
 function listFileName() { return view.title.replace(/[^\w\- ]+/g, '').trim() || 'players'; }
 function download(data, name, type) {
   var a = document.createElement('a');
@@ -2244,14 +1283,6 @@ function download(data, name, type) {
   a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-}
-function exportSlf(L, title) {
-  var buf = new ArrayBuffer(16 + L.length * 4), dv = new DataView(buf);
-  SL_HEADER.forEach(function (x, i) { dv.setUint8(i, x); });
-  dv.setInt32(12, L.length, true);
-  L.forEach(function (p, j) { dv.setInt32(16 + j * 4, p.uid, true); });
-  download(buf, title + '.slf', 'application/octet-stream');
-  status('Exported ' + L.length + ' players. Put the .slf in the game\'s "user data" folder to open it in game.');
 }
 $('#btnSaveSl').addEventListener('click', function () { P().exportList(view.list, listFileName()); });
 // CSV of the visible columns, semicolon-separated like the original TCSVWriter
@@ -2266,14 +1297,14 @@ $('#btnCsv').addEventListener('click', function () {
 // Loading (worker)
 // ======================================================================
 var workerUrl = null;
-function runParser(kind, buf, langId) {
+function runParser(buf) {
   return new Promise(function (resolve, reject) {
     var w;
     try {
       if (!workerUrl) {
         var src = $('#parser-src').textContent + '\nself.onmessage=function(e){var d=e.data;try{var rep=function(s,p){self.postMessage({type:"status",s:s,p:p});};' +
-          'var res=d.kind==="save"?CMParser.parseSave(d.buf,rep):CMParser.parseLang(d.buf,d.langId,rep);' +
-          'var tr=res.attr?[res.attr.buffer,res.rating.buffer,res.bestPos.buffer]:[];self.postMessage({type:"done",res:res},tr);}' +
+          'var res=CMParser.parseSave(d.buf,rep);' +
+          'self.postMessage({type:"done",res:res},[res.attr.buffer,res.rating.buffer,res.bestPos.buffer]);}' +
           'catch(err){self.postMessage({type:"error",message:err.message||String(err)});}};';
         workerUrl = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
       }
@@ -2281,7 +1312,7 @@ function runParser(kind, buf, langId) {
     } catch (e) { w = null; }
     if (!w) { // main-thread fallback
       setTimeout(function () {
-        try { resolve(kind === 'save' ? CMParser.parseSave(buf, progress) : CMParser.parseLang(buf, langId, progress)); }
+        try { resolve(CMParser.parseSave(buf, progress)); }
         catch (e) { reject(e); }
       }, 30);
       return;
@@ -2293,7 +1324,7 @@ function runParser(kind, buf, langId) {
       else { w.terminate(); reject(new Error(d.message)); }
     };
     w.onerror = function (e) { w.terminate(); reject(new Error(e.message || 'Worker failed')); };
-    w.postMessage({ kind: kind, buf: buf, langId: langId }, kind === 'save' ? [buf] : []);
+    w.postMessage({ buf: buf }, [buf]);
   });
 }
 function progress(s, p) {
@@ -2302,14 +1333,14 @@ function progress(s, p) {
   bar.firstElementChild.style.width = Math.round((p || 0) * 100) + '%';
 }
 function status(s) { $('#status').textContent = s; $('#progress').style.display = 'none'; }
-function busy(on) { ['#btnSearch', '#btnTeam', '#btnStarred', '#fileSave', '#fileLang'].forEach(function (s) { $(s).disabled = on || (!DB && s !== '#fileSave' && s !== '#fileLang'); }); }
+function busy(on) { ['#btnSearch', '#btnTeam', '#btnStarred', '#fileSave'].forEach(function (s) { $(s).disabled = on || (!DB && s !== '#fileSave'); }); }
 
 $('#fileSave').addEventListener('change', function () {
   var f = this.files[0]; this.value = ''; if (!f) return;
   busy(true);
   var t0 = performance.now();
   progress('Reading ' + f.name, 0);
-  f.arrayBuffer().then(function (buf) { return runParser('save', buf); }).then(function (res) {
+  f.arrayBuffer().then(function (buf) { return runParser(buf); }).then(function (res) {
     res.fileName = f.name; res.fileSize = f.size; res.loadedAt = Date.now();
     installDB(res);
     status('Loaded ' + thousands(res.players.length) + ' players from ' + f.name + ' in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s');
@@ -2320,64 +1351,20 @@ $('#fileSave').addEventListener('change', function () {
 function installDB(res) {
   DB = res;
   uidIndex = null;
-  DB.game = DB.game || 'cm4';
-  if (!DB.attrKeys) { DB.attrKeys = CMParser.CM4_KEYS; DB.stride = STRIDE; } // cached by an earlier version
   DB.ki = {}; DB.attrKeys.forEach(function (k, i) { DB.ki[k] = i; });
-  settings.lastGame = DB.game; saveSettings();
   applyGameUI();
-  DB.base = { clubs: DB.clubs.map(function (c) { return [c.n, c.s, c.n1, c.n2]; }), nations: DB.nations.map(function (n) { return [n.n, n.s, n.nat]; }), comps: DB.comps.map(function (c) { return [c.n, c.s]; }) };
-  applyLang();
   fillLookups();
-  var ver = DB.game === 'cm0102' ? 'CM 01/02' + (DB.compressed ? ' (compressed)' : '') : 'CM4 · DB v' + DB.version;
+  var ver = 'CM 01/02' + (DB.compressed ? ' (compressed)' : '');
   $('#gameInfo').innerHTML = '<b>' + esc(DB.fileName.replace(/\.[^.]+$/, '')) + '</b><br>' + fmtDate(DB.gameDate) + ' · ' + ver + ' · ' + thousands(DB.players.length) + ' players';
-  ['#btnTeam', '#btnSearch', '#btnStarred', '#fileSl', '#btnLoadSlLabel'].forEach(function (s) { $(s).disabled = false; });
+  ['#btnTeam', '#btnSearch', '#btnStarred'].forEach(function (s) { $(s).disabled = false; });
   updateStarCount();
   setView([], 'none', 'Players');
 }
 
-// lang_db: names keyed by unique ID, applied over the save's own names
-function applyLang() {
-  if (!DB) return;
-  var B = DB.base;
-  DB.clubs.forEach(function (c, i) { c.n = B.clubs[i][0]; c.s = B.clubs[i][1]; c.n1 = B.clubs[i][2]; c.n2 = B.clubs[i][3]; });
-  DB.nations.forEach(function (n, i) { n.n = B.nations[i][0]; n.s = B.nations[i][1]; n.nat = B.nations[i][2]; });
-  DB.comps.forEach(function (c, i) { c.n = B.comps[i][0]; c.s = B.comps[i][1]; });
-  if (LANG && settings.useLang && DB.game === 'cm4') {
-    DB.clubs.forEach(function (c) { var l = LANG.clubs[c.uid]; if (l) { c.n = l.n; c.s = l.s; c.n1 = l.n1; c.n2 = l.n2; } });
-    DB.nations.forEach(function (n) { var l = LANG.nations[n.uid]; if (l) { n.n = l.n; n.s = l.s; n.nat = l.nat; } });
-    DB.comps.forEach(function (c) { var l = LANG.comps[c.uid]; if (l) { c.n = l.n; c.s = l.s; } });
-  }
-}
-function loadLangBytes(buf, name) {
-  return runParser('lang', buf, settings.langId).then(function (res) {
-    LANG = res; LANG.fileName = name;
-    applyLang(); if (DB) { fillLookups(); renderAll(); }
-    updateLangInfo();
-    return res;
-  });
-}
-$('#fileLang').addEventListener('change', function () {
-  var f = this.files[0]; this.value = ''; if (!f) return;
-  f.arrayBuffer().then(function (buf) {
-    return loadLangBytes(buf.slice(0), f.name).then(function (res) {
-      settings.useLang = true; saveSettings();
-      idb.set('lang', { name: f.name, bytes: buf }).catch(function () {});
-      status('lang_db.dat loaded' + (res.usedDefault ? ' (language ' + settings.langId + ' not found in file, using its default)' : ''));
-    });
-  }).catch(function (e) { showError(e, 'Couldn\'t load lang_db.dat'); });
-});
-function updateLangInfo() {
-  $('#btnLangLabel').textContent = LANG ? 'lang_db ✓' : 'lang_db.dat…';
-  $('#langInfo').textContent = LANG ? 'Loaded ' + LANG.fileName + ' (DB v' + LANG.version + '; ' + Object.keys(LANG.clubs).length + ' clubs, ' + Object.keys(LANG.nations).length + ' nations).' : 'No lang_db.dat loaded. Without it, most division names are blank and some club names may be short forms.';
-}
 
 // ---------- cache ----------
 function cacheGame() {
-  var copy = Object.assign({}, DB); delete copy.base; delete copy.ki;
-  // store original names, not language-applied ones
-  copy.clubs = DB.clubs.map(function (c, i) { return Object.assign({}, c, { n: DB.base.clubs[i][0], s: DB.base.clubs[i][1], n1: DB.base.clubs[i][2], n2: DB.base.clubs[i][3] }); });
-  copy.nations = DB.nations.map(function (n, i) { return Object.assign({}, n, { n: DB.base.nations[i][0], s: DB.base.nations[i][1], nat: DB.base.nations[i][2] }); });
-  copy.comps = DB.comps.map(function (c, i) { return Object.assign({}, c, { n: DB.base.comps[i][0], s: DB.base.comps[i][1] }); });
+  var copy = Object.assign({}, DB); delete copy.ki;
   return idb.set('game', copy).then(function () { $('#cacheInfo').textContent = 'Game cached in this browser'; })
     .catch(function (e) { $('#cacheInfo').textContent = 'Could not cache game (' + (e && e.name || 'storage error') + ')'; });
 }
@@ -2405,28 +1392,19 @@ $('#dlgColumns').addEventListener('close', function () {
 });
 
 $('#btnSettings').addEventListener('click', function () {
-  $('#langSel').innerHTML = LANGS.map(function (l) { return '<option value="' + l[1] + '">' + l[0] + '</option>'; }).join('');
-  $('#langSel').value = settings.langId;
-  $('#langUse').checked = settings.useLang;
   $('#cacheGame').checked = settings.cacheGame;
   $('#themeSel').value = settings.theme || '';
   $('#plsInterested').checked = !!settings.interested;
-  updateLangInfo(); updateStorageInfo();
+  updateStorageInfo();
   $('#dlgSettings').showModal();
 });
 function updateStorageInfo() {
   var lsBytes = 0; try { lsBytes = (localStorage.getItem(LS_KEY) || '').length * 2; } catch (e) { /* ignore */ }
   var txt = 'Settings, filters, saved searches and stars: ' + (lsBytes / 1024).toFixed(1) + ' KB in localStorage.';
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function (est) {
-    $('#storageInfo').textContent = txt + ' Cached game + lang_db: ~' + (est.usage / 1048576).toFixed(1) + ' MB in IndexedDB.';
+    $('#storageInfo').textContent = txt + ' Cached game: ~' + (est.usage / 1048576).toFixed(1) + ' MB in IndexedDB.';
   }); else $('#storageInfo').textContent = txt;
 }
-$('#langSel').addEventListener('change', function () {
-  settings.langId = +this.value; saveSettings();
-  idb.get('lang').then(function (l) { if (l) return loadLangBytes(l.bytes.slice(0), l.name); }).catch(showError);
-});
-$('#langUse').addEventListener('change', function () { settings.useLang = this.checked; saveSettings(); applyLang(); if (DB) { fillLookups(); renderAll(); } });
-$('#langForget').addEventListener('click', function () { LANG = null; idb.del('lang').catch(function () {}); applyLang(); if (DB) { fillLookups(); renderAll(); } updateLangInfo(); });
 $('#cacheGame').addEventListener('change', function () {
   settings.cacheGame = this.checked; saveSettings();
   if (!this.checked) { idb.del('game').catch(function () {}); $('#cacheInfo').textContent = ''; } else if (DB) cacheGame();
@@ -2498,17 +1476,14 @@ buildFilterForm();
 applyGameUI();
 $('#filters').classList.toggle('hidden', !settings.panel);
 updateStarCount();
-updateLangInfo();
 renderAll();
 busy(false);
 
 Promise.resolve().then(function () {
-  return idb.get('lang').then(function (l) { if (l) return loadLangBytes(l.bytes.slice(0), l.name); }).catch(function () {});
-}).then(function () {
   if (!settings.cacheGame) return;
   progress('Restoring last game…', 0.5);
   return idb.get('game').then(function (g) {
-    if (!g) { status('Ready'); return; }
+    if (!g || g.game !== 'cm0102') { status('Ready'); return; }
     installDB(g);
     $('#cacheInfo').textContent = 'Restored from browser cache — load the save again to refresh';
     status('Restored ' + g.fileName + ' (' + thousands(g.players.length) + ' players)');

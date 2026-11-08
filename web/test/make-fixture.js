@@ -1,338 +1,191 @@
-// Generates a synthetic CM4 / CM 03-04 saved game (and lang_db.dat) laid out the
-// way the original Delphi loader reads them. Used only to smoke-test the HTML
-// port before real save files are available; it is NOT a real game database.
+// Generates a synthetic Championship Manager 01/02 saved game laid out the way
+// CM Scout 2.00 (CM0102/CMDatabase/CMDatabase.pas) reads it. Test data only.
 //
-//   node make-fixture.js <outdir> [dbVersion]   (default dbVersion 146)
+//   node make-fixture.js <outdir> [players] [--compressed]
 'use strict';
 const fs = require('fs');
 const path = require('path');
 
-class W {
-  constructor() { this.chunks = []; this.len = 0; }
-  raw(b) { this.chunks.push(Buffer.from(b)); this.len += b.length; return this; }
-  u8(v) { const b = Buffer.alloc(1); b.writeUInt8(v & 255); return this.raw(b); }
-  i8(v) { const b = Buffer.alloc(1); b.writeInt8(v); return this.raw(b); }
-  bool(v) { return this.u8(v ? 1 : 0); }
-  u16(v) { const b = Buffer.alloc(2); b.writeUInt16LE(v); return this.raw(b); }
-  i16(v) { const b = Buffer.alloc(2); b.writeInt16LE(v); return this.raw(b); }
-  i32(v) { const b = Buffer.alloc(4); b.writeInt32LE(v); return this.raw(b); }
-  pad(n, fill = 0xAB) { return this.raw(Buffer.alloc(n, fill)); }
-  ws(s) { this.i32(s.length); if (s.length) { this.raw(Buffer.from(s, 'utf16le')); this.u16(0); } return this; }
-  wfixed(s, bytes) { const b = Buffer.alloc(bytes); b.write(s, 'utf16le'); return this.raw(b); }
-  date(y, d) { return this.u16(d).u16(y); }
-  byteArr(size, n) { this.u8(n); return this.pad(size * n); }
-  wordArr(size, n) { this.u16(n); return this.pad(size * n); }
-  intArr(size, n) { this.i32(n); return this.pad(size * n); }
-  list8(a) { this.u8(a.length); a.forEach(x => this.i32(x)); return this; }
-  list16(a) { this.u16(a.length); a.forEach(x => this.i32(x)); return this; }
-  ascii(s) { return this.raw(Buffer.from(s, 'latin1')); }
-  buf() { return Buffer.concat(this.chunks); }
-}
-
-// deterministic RNG
-let seed = 12345;
+let seed = 4242;
 function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 function ri(a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
-function pick(a) { return a[ri(0, a.length - 1)]; }
 
-function build(v, opts) {
-  opts = opts || {};
-  const ge145 = v >= 145;
-  const w = new W();
-  const db = new W();
-  const tail = (id, uid) => db.i32(id).i32(uid);
+function cstr(buf, off, s, len) { Buffer.from(s, 'latin1').copy(buf, off, 0, len - 1); }
+function date(buf, off, y, d, leap) { buf.writeUInt16LE(d, off); buf.writeUInt16LE(y, off + 2); buf.writeInt32LE(leap ? 1 : 0, off + 4); }
 
-  // ---- world definition
-  const nations = [
-    { n: 'England', s: 'England', eu: 2, uid: 1001 },
-    { n: 'Brazil', s: 'Brazil', eu: 1, uid: 1002 },
-    { n: 'Norway', s: 'Norway', eu: 0, uid: 1003 },
-    { n: 'France', s: 'France', eu: 2, uid: 1004 },
-  ];
-  const comps = [
-    { s: 'Premiership', n: 'English Premier Division', nt: 4, nation: 0, uid: 2001 },
-    { s: 'Div 1', n: 'English First Division', nt: 4, nation: 0, uid: 2002 },
-    { s: '', n: '', nt: 0, nation: 2, uid: 2003 }, // name only via lang_db
-  ];
-  const clubs = [
-    { n: 'Northbridge United', s: 'Northbridge', nation: 0, lb: false, uid: 3001, div: 0, fin: 1 },
-    { n: 'Southport Rovers', s: 'Southport', nation: 0, lb: false, uid: 3002, div: 1, fin: 0 },
-    { n: 'Fjordvik IL', s: 'Fjordvik', nation: 2, lb: false, uid: 3003, div: 2, fin: 0 },
-    { n: 'League Body', s: 'League', nation: 0, lb: true, uid: 3004, div: 0, fin: 0 },
-  ];
-  // teams: one first team per real club, plus reserves for club 0, plus a national team
-  const teams = [];
-  clubs.forEach((c, ci) => { if (!c.lb) teams.push({ rt: 10, tt: 0, ct: 0, c: ci, div: c.div, rep: 5000 - ci * 1000, uid: 4000 + teams.length, pl: [] }); });
-  teams.push({ rt: 10, tt: 1, ct: 0, c: 0, div: 1, rep: 2500, uid: 4100, pl: [] });         // Northbridge Reserves
-  teams.push({ rt: 11, tt: 0, ct: 1, c: 0, div: -1, rep: 8000, uid: 4200, pl: [] });         // England national team
-  clubs.forEach((c, ci) => { c.teams = teams.map((t, ti) => (t.ct === 0 && t.c === ci ? ti : -1)).filter(x => x >= 0); });
-  nations.forEach((n, ni) => { n.teams = teams.map((t, ti) => (t.ct === 1 && t.c === ni ? ti : -1)).filter(x => x >= 0); });
-
-  const first = ['John', 'Lars', 'Pierre', 'Carlos', 'Tom', 'Ola', 'Marc', 'Rafael', 'Jamie', 'Sven', 'Luís', 'André'];
-  const second = ['Smith', 'Hansen', 'Dubois', 'Silva', 'Brown', 'Nilsen', 'Martin', 'Souza', 'Clark', 'Berg', 'Gonçalves', 'Øvrebø'];
-  const common = ['Ronaldinho', 'Zé'];
-
-  // people: index 0..: a mix of record types
-  const people = [];
-  const personData = [], playingData = [];
-  const NP = opts.players || 60;
-  for (let j = 0; j < NP; j++) {
-    const ti = j < 20 ? 0 : j < 32 ? 1 : j < 44 ? 2 : j < 50 ? 3 : -1; // 50..59 free agents
-    const gk = j % 11 === 0;
-    const pd = new Array(65).fill(0).map(() => ri(-30, 40));
-    // positions are absolute 1..20
-    for (let k = 0; k < 12; k++) pd[k] = 1;
-    if (gk) { pd[0] = 20; pd[11] = 20; }
-    else {
-      const role = j % 5;
-      if (role === 0) { pd[2] = 20; pd[11] = 20; }
-      if (role === 1) { pd[4] = 20; pd[10] = 18; }
-      if (role === 2) { pd[5] = 19; pd[9] = 16; }
-      if (role === 3) { pd[6] = 20; pd[11] = 20; }
-      if (role === 4) { pd[3] = 17; pd[4] = 16; pd[11] = 20; }
-    }
-    // absolute attributes 1..20 for the rest (indices 37..64)
-    for (let k = 37; k < 65; k++) pd[k] = ri(1, 20);
-    playingData.push(pd);
-    personData.push(new Array(8).fill(0).map(() => ri(1, 20)));
-    const ca = ri(40, 190);
-    const contracts = [];
-    if (ti >= 0) {
-      const t = teams[ti];
-      contracts.push({ t: 0, ft: j % 7 !== 0, b: j % 9 === 0, ct: t.ct, c: t.c, w: ri(500, 40000), e: [2004 + (j % 4), ri(0, 360)],
-        ss: j % 8, ts: [0, 1, 2, 8, 16, 64][j % 6], h: ri(-20, 20), ps: (j + 3) % 8, n: (j % 30) + 1,
-        cl: j % 4 === 0 ? [[0, 1000000 + j * 1000], [9, 500000], [2, 250000], [77, 1]] : j % 4 === 1 ? [[1, 750000]] : [] });
-      if (j === 25) contracts.unshift({ t: 1, ct: 0, c: 0, w: 1000, e: [2004, 150], ss: 4, ts: 0, h: 0, ps: 4, n: 33 }); // on loan at club 0
-      if (j === 45) contracts.push({ t: 5, ft: true, team: 0, ct: 0, c: 3, w: 0, e: [2005, 0], ss: 0, ts: 0, h: 0, ps: 0, n: 0 });
-    } else if (j === 50) {
-      contracts.push({ t: 2, ct: 0, c: 1, w: 200, e: [2003, 300], ss: 0, ts: 0, h: 0, ps: 0, n: 0 }); // trial
-    }
-    if (ti >= 0) teams[ti].pl.push(people.length);
-    if (j < 4) teams[teams.length - 1].pl.push(people.length); // national team call-ups
-    people.push({
-      rt: j === 7 ? 3 : 2, f: j % 13 === 5 ? -1 : j % first.length, s: j % second.length, cn: j === 3 ? 0 : j === 17 ? 1 : -1,
-      dob: [1970 + (j % 20), ri(0, 364)], nat: j % 4, apps: j % 3 === 0 ? ri(0, 60) : 0, goals: j % 6 === 0 ? ri(0, 20) : 0,
-      team: ti >= 0 ? ti : -1, joined: [2000 + (j % 3), ri(0, 364)], pd: j, pld: j,
-      hr: ri(100, 9000), cr: ri(100, 9000), wr: ri(100, 9000), ca, pa: Math.min(200, ca + ri(0, 40)),
-      val: ri(0, 20000) * 1000, sv: ri(0, 20000) * 1000, contracts, an: j === 10 ? [3] : j === 11 ? [1, 3] : [],
-      offers: j === 12 ? [{ type: 0 }, ...(ge145 ? [{ type: 255 }] : [])] : [],
-    });
+// Run-length encoding as decoded by CMCompressedFileStream.pas:
+// byte <= 128 literal; byte > 128 => repeat next byte (byte - 128) times.
+function rle(data) {
+  const out = [];
+  let i = 0;
+  while (i < data.length) {
+    let run = 1;
+    while (i + run < data.length && data[i + run] === data[i] && run < 127) run++;
+    if (run >= 3 || data[i] > 128) { out.push(128 + run, data[i]); i += run; }
+    else { out.push(data[i]); i++; }
   }
-  // non-player record types sprinkled in (must be parsed and skipped)
-  const extra = [
-    { rt: 1 }, { rt: 4 }, { rt: 5 }, { rt: 6 }, { rt: 7 }, { rt: 8 }, { rt: 9 },
-  ];
-  const pdOther = personData.length;
-  personData.push([10, 10, 10, 10, 10, 10, 10, 10]);
-  extra.forEach(x => people.push(Object.assign({ f: 0, s: 0, cn: -1, dob: [1960, 10], nat: 0, apps: 0, goals: 0, team: 0, joined: [2000, 0], pd: pdOther, contracts: [], an: [], offers: [] }, x)));
-  teams[0].pl.push(NP); // a non-player in a squad list: must be ignored by team search
-
-  // ================= game_db.dat =================
-  function gameDb() {
-    const g = db;
-    g.u8(0).u16(46).wfixed('dat', 6).i16(v);
-    g.pad(6); g.date(2003, 200); g.pad(6);
-    if (ge145) g.pad(10);
-    g.intArr(ge145 ? 45 : 43, 2);                                    // awards
-    g.i32(2); for (let j = 0; j < 2; j++) { g.pad(19); g.ws('City' + j); g.pad(11); } // cities
-
-    // clubs
-    g.i32(clubs.length);
-    clubs.forEach((c, ci) => {
-      g.u8(c.lb ? 12 : 0);
-      if (c.lb) g.pad(9);
-      g.i32(c.nation); g.pad(1); g.ws(c.s + ' Nick'); g.pad(1); g.ws('');
-      g.pad(17); g.i32(-1); g.pad(2); g.list8([]); g.list8([1, 2]);
-      g.u8(c.fin);
-      if (c.fin === 0) g.pad(4);
-      else { g.pad(421); if (v > 110) g.pad(16); if (v >= 115) g.pad(1); }
-      g.i32(ci === 0 ? 77 : 0); if (ci === 0) g.pad(13);
-      g.wordArr(4, 2);
-      const infos = ci === 0 ? [5, 6, 1, 2, 3, 4, 7, 0, 8] : [];
-      g.u16(infos.length);
-      infos.forEach((t, k) => {
-        g.u8(t);
-        if (t === 5) g.pad(10); else if (t === 6) g.pad(15); else if (t === 1) g.pad(1); else if (t === 2) g.pad(5);
-        else if (t === 3) { g.bool(true); g.byteArr(4, 3); g.pad(5); }
-        else if (t === 4) g.pad(16); else if (t === 7) g.pad(12);
-        else if (t === 0) { g.pad(1); if (v > 110) g.pad(4); } else if (t === 8) g.pad(1);
-      });
-      g.byteArr(6, 1); g.pad(12); g.wordArr(4, 3); g.byteArr(5, 2); g.pad(5);
-      // TeamCont
-      g.u8(0); g.pad(2); g.ws(c.n); g.ws(c.s); g.byteArr(6, 2); g.list8(c.teams); g.byteArr(8, 1);
-      tail(ci, c.uid);
-    });
-
-    // competitions
-    g.i32(comps.length);
-    comps.forEach((c, k) => {
-      g.u8(0); g.pad(11); g.u8(c.nt); g.pad(1);
-      if (c.nt === 4) { g.ws(c.s); g.ws(c.n); }
-      g.pad(4); g.i32(c.nation); g.pad(13); tail(k, c.uid);
-    });
-    g.intArr(17, 1);                                                  // continents
-    g.i32(1); g.pad(1); g.ws('Broken leg'); g.pad(2); g.ws('BL'); g.pad(17);       // injuries
-    g.i32(1); g.pad(1); g.ws('Paper'); g.pad(1); g.ws('P'); g.pad(2); g.byteArr(4, 2); g.pad(14); // media
-    g.i32(1); g.pad(1); g.ws('English'); g.pad(21);                   // languages
-
-    // nations
-    g.i32(nations.length);
-    nations.forEach((n, k) => {
-      g.u8(0); g.pad(51); g.byteArr(2, 1); g.byteArr(4, 1); g.byteArr(4, 0); g.wordArr(4, 1);
-      for (let j = 0; j < 8; j++) { g.pad(2); g.byteArr(4, j % 2); }
-      if (ge145) { if (k === 1) { g.u16(1); g.pad(13); for (let j = 0; j < 4; j++) g.ws('Imp' + j); } else g.u16(0); }
-      g.pad(2); g.u8(n.eu); g.pad(5); if (ge145) g.pad(1); g.pad(12); g.byteArr(4, 2); g.pad(1); if (v >= 147) g.pad(1);
-      g.u8(1); g.pad(2); g.ws(n.n); g.ws(n.s); g.byteArr(6, 0); g.list8(n.teams); g.byteArr(8, 0);
-      tail(k, n.uid);
-    });
-
-    const names = arr => { g.i32(arr.length); arr.forEach((s, k) => { g.u8(0); g.ws(s); g.pad(6); tail(k, 5000 + k); }); };
-    names(first); names(second); names(common);
-    g.intArr(9, 0);                                                   // regions
-    g.i32(1); g.pad(1); g.ws('Sponsor'); g.pad(1); g.ws('Sp'); g.pad(10);
-    g.intArr(ge145 ? 48 : 47, 2);                                    // stadiums
-    g.intArr(38, 1);                                                  // stadium changes
-    g.i32(1); g.pad(1); g.ws('A'); g.pad(1); g.ws('B'); g.pad(1); g.ws(''); g.pad(9); // stages
-
-    // teams
-    g.i32(teams.length);
-    teams.forEach((t, k) => {
-      g.u8(t.rt);
-      if (t.rt === 11) { g.pad(13); if (ge145) g.pad(1); }
-      g.pad(1); g.u16(t.rep); g.i32(t.div); g.pad(4); if (ge145) g.pad(4); g.pad(4); g.i32(-1); g.pad(19);
-      g.list8([]); g.list16(t.pl); g.list8([]); g.byteArr(4, 2); g.pad(1); g.wordArr(ge145 ? 12 : 11, 1); g.pad(4); if (ge145) g.pad(8);
-      g.i8(t.tt); g.u8(t.ct); g.pad(1); g.i32(t.c); tail(k, t.uid);
-    });
-    g.i32(1); g.pad(1); g.ws('Sunny'); g.pad(87);                    // weather
-    g.intArr(10, 0);                                                  // player types
-
-    // people
-    const contract = c => {
-      if (c.t === 0) {
-        g.bool(c.ft); g.bool(c.b); g.pad(18); g.u8(c.cl.length); g.pad(6);
-        c.cl.forEach(x => { g.i8(x[0] > 127 ? -1 : x[0]); g.i32(x[1]); });
-      } else if (c.t === 1) g.pad(ge145 ? 6 : 7);
-      else if (c.t === 5) { g.bool(c.ft); g.i32(c.team); g.pad(2); }
-      if (ge145 && c.t !== 2) g.pad(1);
-      g.u8(c.ct); g.i32(c.c); g.i32(c.w); g.date(c.e[0], c.e[1]); g.i8(c.ss); g.i8(c.ts); g.pad(8);
-      if (ge145) g.date(2001, 5);
-      g.i8(c.h); g.i8(c.ps); g.pad(1); g.i8(c.n); g.pad(1); if (ge145) g.pad(2);
-    };
-    const playerData = p => {
-      g.i16(p.hr).i16(p.cr).i16(p.wr).i16(p.ca).i16(p.pa).i32(p.pld).pad(4).i32(p.val).pad(20).i32(p.sv);
-      g.bool(true); g.pad(16); g.pad(4);
-      g.bool(true);
-      g.u8(2); [0, 7].forEach(fx => { g.pad(10); g.i8(fx); g.pad(fx === 0 ? 1 : 7); g.pad(16); g.pad(ge145 ? 10 : 9); });
-      g.u8(1); g.pad(18); g.bool(true); g.pad(39);
-      g.bool(true); g.pad(26);
-      g.u8(5); [0, 1, 2, 3, 4].forEach(bt => { g.i8(bt); g.pad(bt === 0 ? 3 : bt === 3 ? 8 : bt === 4 ? 4 : 5); });
-      g.pad(38);
-      if (ge145) { g.bool(true); g.u8(1); g.pad(5); g.u8(2); g.pad(10); g.bool(true); g.pad(29); g.pad(10); g.bool(false); }
-    };
-    const nonPlayerData = () => { g.pad(10); g.pad(1); g.i32(0); };
-    const person = (p, idx) => {
-      g.i32(p.f).i32(p.s).i32(p.cn).date(p.dob[0], p.dob[1]).i32(p.nat).u8(p.apps).u8(p.goals);
-      if (ge145) g.pad(2);
-      g.i32(-1).u8(0).date(1900, 0).i32(p.team).u8(0).date(p.joined[0], p.joined[1]).pad(1).i32(p.pd).pad(4).byteArr(4, 1).pad(8);
-      g.u8(p.contracts.length); p.contracts.forEach(c => { g.u8(c.t); contract(c); });
-      g.u8(p.offers.length);
-      p.offers.forEach(o => { g.u8(o.type); g.pad(6); if (!ge145 || o.type !== 255) contract({ t: 0, ft: true, b: false, cl: [], ct: 0, c: 1, w: 9, e: [2005, 1], ss: 1, ts: 0, h: 0, ps: 1, n: 0 }); });
-      const prefs = [{ rt: 1 }, { rt: 2, rel: 3 }].concat(p.an.map(n => ({ rt: 2, rel: 9, n })));
-      g.bool(true); g.u8(prefs.length);
-      prefs.forEach(x => { g.u8(x.rt); if (x.rt === 2) { g.u8(x.rel); if (x.rel === 9) { g.pad(2); g.i32(x.n); } else g.pad(6); } else g.pad(7); });
-      g.wordArr(4, 2);
-      if (ge145) { const hn = idx % 2 === 0; g.bool(hn); if (hn) { g.ws('Nick'); g.pad(4); } }
-      g.pad(1);
-      tail(idx, 9000 + idx);
-    };
-    const filterLists = () => {
-      const lists = [];
-      lists.push(() => { g.ascii('slfttslf'); g.i32(1); g.ascii('daqstlif'); g.ws('F'); g.pad(5); g.i32(3); g.ascii('rfqs'); g.pad(10); g.ascii('rfsp'); g.pad(2); g.ascii('rfpv'); g.pad(3); g.pad(10); });
-      lists.push(() => { g.ascii('tslttslf'); g.i32(0); });
-      lists.push(() => { g.ascii('tslntslf'); g.i32(1); g.ascii('swentlif'); g.ws('N'); g.pad(5); g.i32(2); g.ascii('rfsn'); g.pad(1); g.ascii('rfcn'); g.pad(2); g.pad(4); });
-      lists.push(() => { g.ascii('ltontslf'); g.i32(1); g.ascii('etontlif'); g.ws(''); g.pad(5); g.i32(1); g.ascii('rftn'); g.pad(9); });
-      lists.push(() => { g.ascii('tslhtslf'); g.i32(1); g.ascii('ntantlif'); g.ws('H'); g.pad(5); g.i32(1); g.ascii('rftn'); g.pad(2); g.intArr(8, 2); g.pad(8); });
-      g.i32(lists.length); lists.forEach(f => f());
-    };
-    g.i32(people.length);
-    people.forEach((p, idx) => {
-      g.u8(p.rt);
-      switch (p.rt) {
-        case 1: nonPlayerData(); person(p, idx); break;
-        case 2: playerData(p); person(p, idx); break;
-        case 3: playerData(p); nonPlayerData(); person(p, idx); if (ge145) g.pad(2); break;
-        case 4: g.pad(24); person(p, idx); break;
-        case 5: g.ws('Old'); g.ws('Timer'); g.pad(2); tail(idx, 9000 + idx); break;
-        case 6: g.pad(1); tail(idx, 9000 + idx); break;
-        case 7: g.pad(6); tail(idx, 9000 + idx); break;
-        case 8: person(p, idx); break;
-        case 9:
-          g.pad(ge145 ? 16 : 12); g.ws('secret'); if (ge145) g.pad(1); g.pad(67); g.byteArr(8, 1); g.pad(96);
-          filterLists(); if (v >= 115) g.pad(4); g.pad(1);
-          if (ge145) { g.pad(11); g.byteArr(32, 1); g.pad(1); }
-          nonPlayerData(); person(p, idx); break;
-      }
-    });
-    g.i32(personData.length); personData.forEach((d, k) => { g.u8(0); d.forEach(x => g.i8(x)); tail(k, 0); });
-    g.i32(playingData.length); playingData.forEach((d, k) => { g.u8(0); d.forEach(x => g.i8(x)); if (ge145) g.pad(1); tail(k, 0); });
-    g.i32(1); g.u8(0); g.pad(28); tail(0, 0);
-    g.pad(64); // trailing tables the loader never reads
-  }
-  gameDb();
-  const dbBuf = db.buf();
-
-  // ================= save container =================
-  const hv = ge145 ? 2 : 1;
-  w.u8(0).u16(46).wfixed('cm4', 6).u16(hv);
-  w.pad(hv === 1 ? 2 : 6); w.pad(54);
-  const table = (name, ext, body) => { if (hv === 2) w.pad(4); w.u8(2); w.wfixed(name, 56); w.wfixed(ext, 8); w.i32(body.length); w.raw(body); };
-  if (hv === 2) w.pad(4); w.u8(0);            // a non-table header byte the loader steps over
-  table('news', 'dat', Buffer.alloc(100, 7));
-  table('game_db', 'dat', dbBuf);
-  table('other', 'dat', Buffer.alloc(80, 1));
-
-  return { save: w.buf(), people, clubs, nations, comps, teams, first, second, common };
+  return Buffer.from(out);
 }
 
-function buildLang() {
-  const g = new W();
-  g.u8(0).u16(46).wfixed('dat', 6).u16(146).pad(1);
-  // two languages: 8 (English) and 7 (Dutch)
-  g.u8(2);
-  const header = 12 + 1 + 16;
-  const sections = {};
-  const body = lang => {
-    const b = new W();
-    b.pad(12);
-    const tbl = (n, f) => { b.i32(n); for (let j = 0; j < n; j++) f(j); };
-    const sfx = lang === 7 ? ' (NL)' : '';
-    tbl(1, () => { b.pad(4); b.ws('City'); b.pad(1); b.ws('C'); b.pad(1); });
-    tbl(3, j => { b.i32(3001 + j); b.ws(['Northbridge United FC', 'Southport Rovers AFC', 'Fjordvik Idrettslag'][j] + sfx); b.pad(1); b.ws(['Northbridge Utd', 'Southport', 'Fjordvik'][j] + sfx); b.pad(1); b.ws('x'); b.pad(1); b.ws('The Bridge'); b.pad(1); b.ws(''); });
-    tbl(1, () => { b.pad(4); b.ws('Europe'); b.pad(1); b.ws('E'); b.ws('Eur'); b.ws('E'); b.pad(1); b.ws('EU'); b.pad(1); b.u8(2); b.ws('a'); b.ws('b'); });
-    tbl(1, () => { b.pad(4); b.ws('Inj'); b.pad(1); b.ws('I'); b.pad(1); });
-    tbl(4, j => { b.i32(1001 + j); b.ws(['England', 'Brazil', 'Norway', 'France'][j] + sfx); b.pad(1); b.ws(['England', 'Brazil', 'Norway', 'France'][j] + sfx); b.pad(1); b.ws('x'); b.ws(['English', 'Brazilian', 'Norwegian', 'French'][j]); b.u8(1); b.ws('alt'); });
-    tbl(1, () => { b.pad(4); b.ws('Award'); b.pad(1); b.ws('A'); b.pad(1); });
-    tbl(1, () => { b.pad(4); b.ws('Stadium'); b.pad(1); });
-    tbl(1, () => { b.pad(4); b.ws('S1'); b.pad(1); b.ws('S2'); b.pad(1); b.ws('S3'); b.pad(1); });
-    tbl(3, j => { b.i32(2001 + j); b.ws(['English Premier Division', 'English First Division', 'Norwegian Premier League'][j] + sfx); b.pad(1); b.ws(['Premiership', 'Div 1', 'Tippeligaen'][j] + sfx); b.pad(1); b.ws('z'); });
-    return b.buf();
-  };
-  const en = body(8), nl = body(7);
-  sections[7] = header; sections[8] = header + nl.length;
-  g.i32(7).i32(sections[7]).i32(8).i32(sections[8]);
-  g.raw(nl); g.raw(en);
-  return g.buf();
+const ATTR = ['Acceleration','Aggression','Agility','Anticipation','Balance','Bravery','Consistency','Corners','Crossing','Decisions','Dirtiness','Dribbling','Finishing','Flair','FreeKicks','Handling','Heading','ImportantMatches','InjuryProneness','Jumping','Leadership','LeftFoot','LongShots','Marking','Movement','NaturalFitness','OneOnOnes','PlayerPace','Passing','Penalties','Positioning','Reflexes','RightFoot','Stamina','Strength','Tackling','Teamwork','Technique','ThrowIns','Versatility','Vision','WorkRate'];
+
+function build(opts) {
+  seed = 4242;
+  opts = opts || {};
+  const NP = opts.players || 40;
+  const compressed = !!opts.compressed;
+  const nations = [
+    { id: 11, n: 'England', s: 'England', nat: 'English', gm: 2 },
+    { id: 12, n: 'Brazil', s: 'Brazil', nat: 'Brazilian', gm: 1 },
+    { id: 13, n: 'Denmark', s: 'Denmark', nat: 'Danish', gm: 2 },
+  ];
+  const divisions = [
+    { id: 21, n: 'English Premier Division', s: 'Premier', nation: 0 },
+    { id: 22, n: 'Danish Superliga', s: 'Superliga', nation: 2 },
+  ];
+  const clubs = [
+    { id: 31, n: 'Kingsbury Athletic', s: 'Kingsbury', nation: 0, div: 0, rep: 7000 },
+    { id: 32, n: 'Aalvik Boldklub', s: 'Aalvik', nation: 2, div: 1, rep: 4200 },
+    { id: 33, n: 'Riverside Town', s: 'Riverside', nation: 0, div: 0, rep: 5100 },
+  ];
+  const first = ['Peter', 'Jens', 'Marcos', 'Gary', 'Søren', 'Ian'];
+  const second = ['Hughes', 'Larsen', 'Oliveira', 'Wright', 'Kjær', 'Moore'];
+  const common = ['', 'Juninho']; // index 0 = empty common name
+
+  // staff: players first, then a few non-players
+  const staff = [];
+  for (let j = 0; j < NP; j++) {
+    const club = j < 14 ? 0 : j < 26 ? 1 : j < 34 ? 2 : -1;
+    staff.push({ id: 7000 + j, player: j, club, f: j % first.length, s: j % second.length, c: j === 4 ? 1 : 0,
+      dob: [1970 + (j % 15), ri(0, 360), (1970 + (j % 15)) % 4 === 0], nat: j % 3, nat2: j === 5 ? 0 : -1,
+      apps: j % 4 === 0 ? ri(1, 50) : 0, goals: j % 8 === 0 ? ri(1, 10) : 0, wage: ri(100, 30000), value: ri(0, 5000) * 1000,
+      pers: [ri(1, 20), ri(1, 20), ri(1, 20), ri(1, 20), ri(1, 20), ri(1, 20), ri(1, 20), ri(1, 20)] });
+  }
+  for (let j = 0; j < 3; j++) staff.push({ id: 9000 + j, player: -1, club: 0, f: 0, s: 0, c: 0, dob: [1950, 10, false], nat: 0, nat2: -1, apps: 0, goals: 0, wage: 1, value: 0, pers: [10, 10, 10, 10, 10, 10, 10, 10] });
+
+  const players = [];
+  for (let j = 0; j < NP; j++) {
+    const gk = j % 9 === 0;
+    const pos = new Array(12).fill(1);
+    if (gk) pos[0] = 20;
+    else {
+      const r = j % 4;
+      if (r === 0) { pos[2] = 20; pos[10] = 20; }        // D C
+      if (r === 1) { pos[4] = 18; pos[9] = 17; }         // M L
+      if (r === 2) { pos[5] = 19; pos[8] = 16; }         // AM R
+      if (r === 3) { pos[6] = 20; pos[10] = 20; }        // S C
+    }
+    const at = ATTR.map(() => ri(-40, 40));
+    // unconverted attributes are already 1..20
+    ['Acceleration','Aggression','Agility','Balance','Bravery','Consistency','Corners','Dirtiness','Flair','FreeKicks','ImportantMatches','InjuryProneness','Jumping','Leadership','LeftFoot','NaturalFitness','PlayerPace','RightFoot','Stamina','Strength','Teamwork','Technique','Versatility','WorkRate']
+      .forEach(k => { at[ATTR.indexOf(k)] = ri(1, 20); });
+    const ca = ri(30, 190);
+    players.push({ id: 5000 + j, num: (j % 25) + 1, ca, pa: Math.min(200, ca + ri(0, 30)), hr: ri(100, 8000), cr: ri(100, 8000), wr: ri(100, 8000), pos, at, morale: ri(1, 20) });
+  }
+
+  // contracts (contract ID = staff index)
+  const contracts = [];
+  staff.forEach((s, si) => {
+    if (s.club < 0 || s.player < 0) return;
+    const c = { sid: si, club: s.club, wage: s.wage, gb: si % 3 === 0 ? 500 : -1, ab: -1, cb: si % 5 === 0 ? 200 : -1,
+      np: si % 6 === 0 ? 2 : 0, mf: si % 4 === 0 ? 1 : 0, npl: si % 7 === 0 ? 1 : 0, rel: si % 5 === 0 ? 1 : 0, mj: 0, fee: 250000 + si * 1000,
+      st: [2000 + (si % 3), ri(0, 360)], e: [2002 + (si % 4), ri(0, 360)], t: [0x02, 0x82, 0x01, 0x42, 0x85, 0xC2][si % 6], b: si % 10 === 0,
+      arr: si === 3 ? 2 : -1, ts: [0, 1, 8, 2, 9, 0][si % 6], ss: (si % 9) << 4 };
+    if (si === 6) {
+      // on loan at club 0 (ClubJob) from club 2: loan-club contract first, parent contract second
+      contracts.push(Object.assign({}, c, { club: 0, t: 0x06, e: [2002, 150] }));
+      contracts.push(Object.assign({}, c, { club: 2 }));
+      return;
+    }
+    contracts.push(c);
+  });
+
+  // ---- block payloads
+  const general = Buffer.alloc(3944 + 8 + 100, 0x11);
+  date(general, 3944, 2002, 220, false);
+
+  const nationBuf = Buffer.alloc(nations.length * 290, 0);
+  nations.forEach((n, i) => {
+    const o = i * 290;
+    nationBuf.writeInt32LE(n.id, o); cstr(nationBuf, o + 4, n.n, 51); cstr(nationBuf, o + 56, n.s, 26); cstr(nationBuf, o + 87, n.nat, 26);
+    nationBuf.writeUInt8(n.gm, o + 127);
+    nationBuf.writeInt32LE(-1, o + 272); nationBuf.writeInt32LE(-1, o + 276); nationBuf.writeInt32LE(-1, o + 280);
+  });
+  const divBuf = Buffer.alloc(divisions.length * 107, 0);
+  divisions.forEach((d, i) => { const o = i * 107; divBuf.writeInt32LE(d.id, o); cstr(divBuf, o + 4, d.n, 51); cstr(divBuf, o + 56, d.s, 26); divBuf.writeInt32LE(d.nation, o + 93); divBuf.writeUInt16LE(500, o + 105); });
+  const clubBuf = Buffer.alloc(clubs.length * 581, 0);
+  clubs.forEach((c, ci) => {
+    const o = ci * 581;
+    clubBuf.writeInt32LE(c.id, o); cstr(clubBuf, o + 4, c.n, 51); cstr(clubBuf, o + 56, c.s, 26);
+    clubBuf.writeInt32LE(c.nation, o + 83); clubBuf.writeInt32LE(c.div, o + 87); clubBuf.writeInt32LE(-1, o + 91); clubBuf.writeInt32LE(-1, o + 96);
+    clubBuf.writeUInt16LE(c.rep, o + 128);
+    const squad = staff.map((s, si) => (s.club === ci ? si : -1)).filter(x => x >= 0); // includes non-players for club 0
+    for (let k = 0; k < 50; k++) clubBuf.writeInt32LE(k < squad.length ? squad[k] : -1, o + 215 + k * 4);
+  });
+  const nameBuf = arr => { const b = Buffer.alloc(arr.length * 60, 0); arr.forEach((n, i) => { cstr(b, i * 60, n, 51); b.writeInt32LE(100 + i, i * 60 + 51); b.writeInt32LE(0, i * 60 + 55); b.writeUInt8(1, i * 60 + 59); }); return b; };
+  const playerBuf = Buffer.alloc(players.length * 70, 0);
+  players.forEach((p, i) => {
+    const o = i * 70;
+    playerBuf.writeInt32LE(p.id, o); playerBuf.writeUInt8(p.num, o + 4);
+    [p.ca, p.pa, p.hr, p.cr, p.wr].forEach((v, k) => playerBuf.writeUInt16LE(v, o + 5 + k * 2));
+    p.pos.forEach((v, k) => playerBuf.writeInt8(v, o + 15 + k));
+    p.at.forEach((v, k) => playerBuf.writeInt8(v, o + 27 + k));
+    playerBuf.writeUInt8(p.morale, o + 69);
+  });
+  const staffBuf = Buffer.alloc(staff.length * 110, 0);
+  staff.forEach((s, i) => {
+    const o = i * 110;
+    staffBuf.writeInt32LE(s.id, o); staffBuf.writeInt32LE(s.f, o + 4); staffBuf.writeInt32LE(s.s, o + 8); staffBuf.writeInt32LE(s.c, o + 12);
+    date(staffBuf, o + 16, s.dob[0], s.dob[1], s.dob[2]); staffBuf.writeUInt16LE(s.dob[0], o + 24);
+    staffBuf.writeInt32LE(s.nat, o + 26); staffBuf.writeInt32LE(s.nat2, o + 30); staffBuf.writeUInt8(s.apps, o + 34); staffBuf.writeUInt8(s.goals, o + 35);
+    staffBuf.writeInt32LE(-1, o + 36);
+    staffBuf.writeInt32LE(s.club, o + 57); date(staffBuf, o + 62, 2000, 100, false); date(staffBuf, o + 70, 2004, 150, false);
+    staffBuf.writeInt32LE(s.wage, o + 78); staffBuf.writeInt32LE(s.value, o + 82);
+    s.pers.forEach((v, k) => staffBuf.writeUInt8(v, o + 86 + k));
+    staffBuf.writeInt32LE(s.player, o + 97); staffBuf.writeInt32LE(-1, o + 101); staffBuf.writeInt32LE(s.player < 0 ? 0 : -1, o + 105);
+  });
+  const PRE = 2;
+  const conBuf = Buffer.alloc(8 + PRE * 21 + contracts.length * 80, 0);
+  conBuf.writeInt32LE(PRE, 0); conBuf.writeInt32LE(999, 4); // the real count comes from the last pre record
+  for (let k = 0; k < PRE; k++) conBuf.writeInt32LE(k === PRE - 1 ? contracts.length : 77, 8 + k * 21 + 17);
+  contracts.forEach((c, i) => {
+    const o = 8 + PRE * 21 + i * 80;
+    conBuf.writeInt32LE(c.sid, o); conBuf.writeInt32LE(c.club, o + 4); conBuf.writeInt32LE(c.wage, o + 12);
+    conBuf.writeInt32LE(c.gb, o + 16); conBuf.writeInt32LE(c.ab, o + 20); conBuf.writeInt32LE(c.cb, o + 24);
+    [c.np, c.mf, c.npl, c.rel, c.mj].forEach((v, k) => conBuf.writeUInt8(v, o + 28 + k));
+    conBuf.writeInt32LE(c.fee, o + 33); date(conBuf, o + 37, c.st[0], c.st[1], false); date(conBuf, o + 45, c.e[0], c.e[1], false);
+    conBuf.writeUInt8(c.t, o + 53); conBuf.writeUInt8(c.b ? 1 : 0, o + 73); conBuf.writeInt32LE(c.arr, o + 74);
+    conBuf.writeUInt8(c.ts, o + 78); conBuf.writeUInt8(c.ss, o + 79);
+  });
+
+  const blocks = [
+    ['general.dat', general], ['nation.dat', nationBuf], ['club_comp.dat', divBuf], ['club.dat', clubBuf],
+    ['first_names.dat', nameBuf(first)], ['second_names.dat', nameBuf(second)], ['common_names.dat', nameBuf(common)],
+    ['player.dat', playerBuf], ['nonplayer.dat', Buffer.alloc(68 * 3, 0)], ['staff.dat', staffBuf], ['contract.dat', conBuf],
+    ['news.dat', Buffer.alloc(300, 0x42)],
+  ];
+  const header = Buffer.alloc(12 + blocks.length * 268, 0);
+  header.writeInt32LE(compressed ? 4 : 3, 0);
+  header.writeInt32LE(blocks.length, 8);
+  const bodies = [];
+  let pos = header.length;
+  blocks.forEach(([name, data], i) => {
+    const body = compressed ? rle(data) : data;
+    const o = 12 + i * 268;
+    header.writeInt32LE(pos, o); header.writeInt32LE(data.length, o + 4); cstr(header, o + 8, name, 260);
+    bodies.push(body); pos += body.length;
+  });
+  return { save: Buffer.concat([header].concat(bodies)), staff, players, contracts, clubs, nations };
 }
 
 if (require.main === module) {
   const out = process.argv[2] || path.join(__dirname, 'fixtures');
-  const v = +(process.argv[3] || 146);
-  const players = +(process.argv[4] || 60);
+  const n = +(process.argv[3] || 40);
+  const compressed = process.argv.includes('--compressed');
   fs.mkdirSync(out, { recursive: true });
-  const r = build(v, { players });
-  const file = path.join(out, `test-v${v}${players !== 60 ? '-' + players : ''}.cm4`);
+  const r = build({ players: n, compressed });
+  const file = path.join(out, `test-0102${compressed ? '-compressed' : ''}${n !== 40 ? '-' + n : ''}.sav`);
   fs.writeFileSync(file, r.save);
-  fs.writeFileSync(path.join(out, 'lang_db.dat'), buildLang());
-  console.log(`wrote ${file} (${r.save.length} bytes) and lang_db.dat`);
+  console.log(`wrote ${file} (${r.save.length} bytes)`);
 }
-module.exports = { build, buildLang };
+module.exports = { build, rle };
