@@ -54,6 +54,7 @@ check that the port is internally consistent. They don't prove compatibility wit
 ```sh
 cd web/test
 node parser.test.js            # parser against fixtures for DB versions 110..147
-node e2e.test.js [shotsDir]    # Playwright: load, filter, sort, team search, shortlists, cache restore
+node e2e.test.js [shotsDir]    # Playwright: load, filter, sort, team search, shortlists, cache restore;
+                               # with shotsDir, saves a numbered 2x screenshot of each step
 node make-fixture.js out 146 100000   # big synthetic save for performance checks
 ```

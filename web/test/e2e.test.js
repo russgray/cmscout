@@ -18,13 +18,15 @@ const { build, buildLang } = require('./make-fixture');
   const url = 'file://' + path.join(__dirname, '..', 'cmscout.html');
 
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1400, height: 860 }, acceptDownloads: true });
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 860 }, deviceScaleFactor: shots ? 2 : 1, acceptDownloads: true });
+  let shotN = 0;
+  const shot = async name => { if (shots) await page.screenshot({ path: path.join(shots, String(++shotN).padStart(2, '0') + '-' + name + '.png') }); };
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(url);
-  if (shots) await page.screenshot({ path: path.join(shots, '0-empty.png') });
+  await shot('empty');
 
   // load save
   await page.setInputFiles('#fileSave', save);
@@ -36,12 +38,14 @@ const { build, buildLang } = require('./make-fixture');
   await page.click('#btnSearch');
   assert.strictEqual(await page.evaluate(() => window.CMScout.view.list.length), 60);
   assert.match(await page.textContent('#resultsCount'), /60 players found/);
+  await shot('all-players');
 
   // position filter: goalkeepers only (players 0, 11, 22, ...)
   await page.check('[data-pos="Goalkeeper"]');
   await page.click('#btnSearch');
   const gks = await page.evaluate(() => window.CMScout.view.list.map(p => p.uid).sort((a, b) => a - b));
   assert.deepStrictEqual(gks, [9000, 9011, 9022, 9033, 9044, 9055]);
+  await shot('goalkeepers-filter');
   await page.uncheck('[data-pos="Goalkeeper"]');
 
   // name filter matches common names and is accent-insensitive
@@ -65,6 +69,7 @@ const { build, buildLang } = require('./make-fixture');
   await page.selectOption('#f_contract', '0');
   await page.click('#btnSearch');
   assert.strictEqual(await page.evaluate(() => window.CMScout.view.list.length), 10);
+  await shot('contract-tab-free-transfers');
   await page.selectOption('#f_contract', '');
 
   // attribute range
@@ -73,6 +78,7 @@ const { build, buildLang } = require('./make-fixture');
   await page.click('#btnSearch');
   const pace = await page.evaluate(() => { const d = window.CMScout.db, A = 51; return window.CMScout.view.list.every(p => d.attr[p.i * 73 + A] >= 15); });
   assert.ok(pace);
+  await shot('attributes-tab-pace-15');
   await page.click('#btnReset');
   await page.click('.tabs button[data-tab="tGeneral"]');
 
@@ -104,10 +110,12 @@ const { build, buildLang } = require('./make-fixture');
   await page.fill('#clubFind', 'north');
   await page.selectOption('#clubList', { index: 0 });
   await page.dispatchEvent('#clubList', 'change');
+  await shot('team-search-dialog');
   await page.click('#teamOk');
   await page.waitForFunction(() => window.CMScout.view.mode === 'team');
   assert.strictEqual(await page.evaluate(() => window.CMScout.view.list.length), 26); // first team 20 + reserves 6
   assert.match(await page.textContent('#resultsTitle'), /Northbridge United FC/);
+  await shot('team-search-results-with-lang-names');
 
   // export shortlist, then load it back
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#btnSaveSl')]);
@@ -130,7 +138,7 @@ const { build, buildLang } = require('./make-fixture');
   await page.dblclick('[data-row="2"]');
   await page.waitForSelector('#dlgPlayer[open]');
   assert.match(await page.textContent('#piSub'), /Age \d+/);
-  if (shots) await page.screenshot({ path: path.join(shots, '2-player.png') });
+  await shot('player-detail');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Escape');
 
@@ -143,7 +151,7 @@ const { build, buildLang } = require('./make-fixture');
   assert.strictEqual(await page.evaluate(() => window.CMScout.settings().columns.visible.includes('wage')), true);
 
   await page.click('#btnSearch');
-  if (shots) await page.screenshot({ path: path.join(shots, '1-results.png') });
+  await shot('results-with-wage-column');
 
   // reload: game, lang_db, filters, stars and columns come back from storage
   await page.waitForTimeout(500);
@@ -155,6 +163,11 @@ const { build, buildLang } = require('./make-fixture');
   await page.waitForFunction(() => document.querySelector('#btnLangLabel').textContent.includes('✓'));
   await page.click('#btnStarred');
   assert.strictEqual(await page.evaluate(() => window.CMScout.view.list.length), 2);
+  await shot('after-reload-starred');
+  await page.click('#btnSettings');
+  await page.waitForSelector('#dlgSettings[open]');
+  await shot('settings');
+  await page.keyboard.press('Escape');
 
   // a bad file reports an error instead of crashing
   const bad = path.join(tmp, 'bad.cm4');
@@ -162,6 +175,7 @@ const { build, buildLang } = require('./make-fixture');
   await page.setInputFiles('#fileSave', bad);
   await page.waitForSelector('#dlgError[open]');
   assert.match(await page.textContent('#errText'), /valid CM4 saved game/);
+  await shot('bad-file-error');
 
   assert.deepStrictEqual(errors.filter(e => !/valid CM4 saved game/.test(e)), []);
   await browser.close();
