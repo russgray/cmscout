@@ -85,4 +85,4 @@ modules/
 
 # web test fixtures
 web/test/fixtures/
-web/test/screenshots/
+web/test/screenshots*/
