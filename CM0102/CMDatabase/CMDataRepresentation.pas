@@ -1,0 +1,354 @@
+unit CMDataRepresentation;
+
+{ $Id: CMDataRepresentation.pas,v 1.1.1.1 2002/04/20 21:33:42 michael Exp $ }
+
+interface
+
+type
+  TShortText = array[0..25] of Char;
+  TStandardText = array[0..50] of Char;
+  TLongText = array[0..100] of Char;
+
+  TCMDate = packed record
+    Day: Word;
+    Year: Word;
+    LeapYear: LongInt;
+  end;
+
+  PStaff = ^TStaff;
+
+  PBlock = ^TBlock;
+  TBlock = packed record
+    Position: LongInt;
+    Size: LongInt;
+    Name: array[0..259] of Char;
+  end;
+
+  PNation = ^TNation;
+  TNation = packed record
+    ID: LongInt;
+    Name: TStandardText;
+    GenderName: Char;
+    ShortName: TShortText;
+    GenderShortName: Char;
+    ThreeLetterName: array[0..3] of Char;
+    Nationality: TShortText;
+    Continent: LongInt;
+    Region: Byte;
+    ActualRegion: Byte;
+    FirstLanguage: Byte;
+    SecondLanguage: Byte;
+    ThirdLanguage: Byte;
+    Capital: LongInt;
+    StateOfDevelopment: Byte;
+    GroupMembership: Byte;
+    NationalStadium: LongInt;
+    GameImportance: Byte;
+    LeagueStandard: Byte;
+    NumberClubs: Word;
+    NumberStaff: LongInt;
+    UpdateDay: Word;
+    Reputation: Word;
+    ForeColour1: LongInt;
+    BackColour1: LongInt;
+    ForeColour2: LongInt;
+    BackColour2: LongInt;
+    ForeColour3: LongInt;
+    BackColour3: LongInt;
+    FIFACoefficient: Double;
+    FIFACoefficient91: Double;
+    FIFACoefficient92: Double;
+    FIFACoefficient93: Double;
+    FIFACoefficient94: Double;
+    FIFACoefficient95: Double;
+    FIFACoefficient96: Double;
+    UEFACoefficient91: Double;
+    UEFACoefficient92: Double;
+    UEFACoefficient93: Double;
+    UEFACoefficient94: Double;
+    UEFACoefficient95: Double;
+    UEFACoefficient96: Double;
+    Rival1: PNation;
+    Rival2: PNation;
+    Rival3: PNation;
+    LeagueSelected: Byte;
+    ShortlistOffset: LongInt;
+    GamesPlayed: Byte;
+  end;
+
+  PDivision = ^TDivision;
+  TDivision = packed record
+    ID: LongInt;
+    Name: TStandardText;
+    GenderName: Char;
+    ShortName: TShortText;
+    GenderShortName: Char;
+    ThreeLetterName: array[0..3] of Char;
+    Scope: Byte;
+    Selected: Byte;
+    Continent: LongInt;
+    Nation: PNation;
+    ForeColour: LongInt;
+    BackColour: LongInt;
+    Reputation: Word;
+  end;
+  
+  PClub = ^TClub;
+  TClub = packed record
+    ID: LongInt;
+    Name: TStandardText;
+    GenderName: Char;
+    ShortName: TShortText;
+    ShortGenderName: Char;
+    Nation: PNation;
+    Division: PDivision;
+    LastDivision: PDivision;
+    LastPosition: Byte;
+    ReserveDivision: PDivision;
+    ProfessionalStatus: Byte;
+    Cash: LongInt;
+    Stadium: LongInt;
+    OwnStadium: Byte;
+    ReserveStadium: LongInt;
+    MatchDay: Byte;
+    Attendance: LongInt;
+    MinAttendance: LongInt;
+    MaxAttendance: LongInt;
+    Training: Byte;
+    Reputation: Word;
+    PLC: Byte;
+    ForeColour1: LongInt;
+    BackColour1: LongInt;
+    ForeColour2: LongInt;
+    BackColour2: LongInt;
+    ForeColour3: LongInt;
+    BackColour3: LongInt;
+    FavStaff1: PStaff;
+    FavStaff2: PStaff;
+    FavStaff3: PStaff;
+    DisStaff1: PStaff;
+    DisStaff2: PStaff;
+    DisStaff3: PStaff;
+    Rival1: PClub;
+    Rival2: PClub;
+    Rival3: PClub;
+    Chairman: PStaff;
+    Directors: array[0..2] of PStaff;
+    Manager: PStaff;
+    AssistantManager: PStaff;
+    Squad: array[0..49] of PStaff;
+    Coaches: array[0..4] of PStaff;
+    Scouts: array[0..6] of PStaff;
+    Physios: array[0..2] of PStaff;
+    EuroFlag: LongInt;
+    EuroSeeding: Byte;
+    TeamSelected: array[0..19] of PStaff;
+    TacticTraining: array[0..3] of LongInt;
+    TacticSelected: LongInt;
+    HasLinkedClub: Byte;
+  end;
+
+  PName = ^TName;
+  TName = packed record
+    Name: TStandardText;
+    ID: LongInt;
+    Nation: PNation;
+    Count: Byte;
+  end;
+
+  PPlayer = ^TPlayer;
+  TPlayer = packed record
+    ID: LongInt;
+    SquadNumber: Byte;
+    CurrentAbility: Word;
+    PotentialAbility: Word;
+    HomeReputation: Word;
+    CurrentReputation: Word;
+    WorldReputation: Word;
+    Goalkeeper: ShortInt;
+    Sweeper: ShortInt;
+    Defender: ShortInt;
+    DefensiveMidfielder: ShortInt;
+    Midfielder: ShortInt;
+    AttackingMidfielder: ShortInt;
+    Attacker: ShortInt;
+    WingBack: ShortInt;
+    RightSide: ShortInt;
+    LeftSide: ShortInt;
+    Central: ShortInt;
+    FreeRole: ShortInt;
+    Acceleration: ShortInt;
+    Aggression: ShortInt;
+    Agility: ShortInt;
+    Anticipation: ShortInt;
+    Balance: ShortInt;
+    Bravery: ShortInt;
+    Consistency: ShortInt;
+    Corners: ShortInt;
+    Crossing: ShortInt;
+    Decisions: ShortInt;
+    Dirtiness: ShortInt;
+    Dribbling: ShortInt;
+    Finishing: ShortInt;
+    Flair: ShortInt;
+    FreeKicks: ShortInt;
+    Handling: ShortInt;
+    Heading: ShortInt;
+    ImportantMatches: ShortInt;
+    InjuryProneness: ShortInt;
+    Jumping: ShortInt;
+    Leadership: ShortInt;
+    LeftFoot: ShortInt;
+    LongShots: ShortInt;
+    Marking: ShortInt;
+    Movement: ShortInt;
+    NaturalFitness: ShortInt;
+    OneOnOnes: ShortInt;
+    PlayerPace: ShortInt;
+    Passing: ShortInt;
+    Penalties: ShortInt;
+    Positioning: ShortInt;
+    Reflexes: ShortInt;
+    RightFoot: ShortInt;
+    Stamina: ShortInt;
+    Strength: ShortInt;
+    Tackling: ShortInt;
+    Teamwork: ShortInt;
+    Technique: ShortInt;
+    ThrowIns: ShortInt;
+    Versatility: ShortInt;
+    Vision: ShortInt;
+    WorkRate: ShortInt;
+    PlayerMorale: Byte;
+    Scouted: Boolean;
+    GKScout: Double;
+    DScout: Double;
+    DMScout: Double;
+    MScout: Double;
+    AMScout: Double;
+    WScout: Double;
+    AScout: Double;
+  end;
+
+  PNonPlayer = ^TNonPlayer;
+  TNonPlayer = packed record
+    ID: LongInt;
+    CurrentAbility: Word;
+    PotentialAbility: Word;
+    HomeReputation: Word;
+    CurrentReputation: Word;
+    WorldReputation: Word;
+    Attacking: Byte;
+    Business: Byte;
+    Coaching: Byte;
+    CoachingGks: Byte;
+    CoachingTechnique: Byte;
+    Directness: Byte;
+    Discipline: Byte;
+    FreeRoles: Byte;
+    Interference: Byte;
+    Judgement: Byte;
+    JudgingPotential: Byte;
+    ManHandling: Byte;
+    Marking: Byte;
+    Motivating: Byte;
+    Offside: Byte;
+    Patience: Byte;
+    Physiotherapy: Byte;
+    Pressing: Byte;
+    Resources: Byte;
+    Tactics: Byte;
+    Youngsters: Byte;
+    Goalkeeper: LongInt;
+    Sweeper: LongInt;
+    Defender: LongInt;
+    DefensiveMidfielder: LongInt;
+    Midfielder: LongInt;
+    AttackingMidfielder: LongInt;
+    Attacker: LongInt;
+    WingBack: LongInt;
+    Formation: Byte;
+  end;
+
+  PContract = ^TContract;
+  TContract = packed record
+    ID: LongInt;
+    Club: PClub;
+    Unknown1: array[0..3] of Byte;
+    Wage: LongInt;
+    GoalBonus: LongInt;
+    AssistBonus: LongInt;
+    CleanSheetBonus: LongInt;
+    NonPromotionRC: Byte;
+    MinimumFeeRC: Byte;
+    NonPlayingRC: Byte;
+    RelegationRC: Byte;
+    ManagerJobRC: Byte;
+    ReleaseFee: LongInt;
+    DateStarted: TCMDate;
+    ContractExpires: TCMDate;
+    ContractType: Byte;
+    Unknown2: array[0..18] of Byte;
+    LeavingOnBosman: Boolean;
+    TransferArrangedFor: PClub;
+    TransferStatus: Byte;
+    SquadStatus: Byte;
+  end;
+
+  TStaff = packed record
+    ID: LongInt;
+    FirstName: PName;
+    SecondName: PName;
+    CommonName: PName;
+    DateOfBirth: TCMDate;
+    YearOfBirth: Word;
+    Nation: PNation;
+    SecondNation: PNation;
+    IntApps: Byte;
+    IntGoals: Byte;
+    NationalJob: PNation;
+    JobForNation: Byte;
+    DateJoinedNation: TCMDate;
+    DateExpiresNation: TCMDate;
+    ClubJob: PClub;
+    JobForClub: Byte;
+    DateJoinedClub: TCMDate;
+    DateExpiresClub: TCMDate;
+    Wage: LongInt;
+    Value: LongInt;
+    Adaptability: Byte;
+    Ambition: Byte;
+    Determination: Byte;
+    Loyality: Byte;
+    Pressure: Byte;
+    Professionalism: Byte;
+    Sportsmanship: Byte;
+    Temperament: Byte;
+    PlayingSquad: Byte;
+    Classification: Byte;
+    ClubValuation: Byte;
+    Player: PPlayer;
+    StaffPreferences: LongInt;
+    NonPlayer: PNonPlayer;
+    SquadSelectedFor: Byte;
+    Contract: PContract;
+    LoanContract: PContract;
+  end;
+
+const
+  CMDateSize = 8;
+  BlockSize = 268;
+  NationSize = 290;
+  DivisionSize = 107;
+  ClubSize = 581;
+  NameSize = 60;
+  PlayerSize = 70;
+  NonPlayerSize = 68;
+  StaffSize = 110;
+  ContractSize = 80;
+  LoanContractSize = 111;
+
+implementation
+
+end.
+ 
