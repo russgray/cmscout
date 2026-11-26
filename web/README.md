@@ -5,6 +5,15 @@ source in [`../CM0102/`](../CM0102/)) for **Championship Manager 01/02** to the 
 Open it directly from disk or host it anywhere as a static file. It has no dependencies and
 makes no network requests. Save files are read locally and never uploaded.
 
+## Hosting
+
+`.github/workflows/pages.yml` publishes the page to GitHub Pages on every push to `master` that
+touches `web/`, after the parser and browser tests pass. The page is served as the site's
+`index.html` (also as `cmscout.html`). It can also be run by hand from the Actions tab.
+
+One-time setup: in the repository's **Settings → Pages → Build and deployment**, set
+**Source** to **GitHub Actions**.
+
 ## What it does
 
 | Original (Delphi)                           | Browser port                                                      |
