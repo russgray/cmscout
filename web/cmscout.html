@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CM Scout 01/02</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --panel2: #f0f2f5; --line: #dde1e7; --text: #1c2330; --muted: #6a7486;
+  --accent: #2a64d6; --accent-ink: #fff; --row-alt: #fafbfc; --row-hover: #eef3fd; --row-sel: #dbe6fb;
+  --good: #1c8a4a; --warn: #b26b00; --bad: #c0392b; --star: #e0a400;
+  --shadow: 0 8px 30px rgba(20,30,50,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171c; --panel: #1b1f26; --panel2: #232831; --line: #2f3540; --text: #e3e7ee; --muted: #8b95a7;
+    --accent: #5b8cff; --accent-ink: #0d1220; --row-alt: #1e232b; --row-hover: #26304a; --row-sel: #2c3b63;
+    --good: #4cc27e; --warn: #e3a33b; --bad: #ef6b5b; --star: #f2c230; --shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --panel: #1b1f26; --panel2: #232831; --line: #2f3540; --text: #e3e7ee; --muted: #8b95a7;
+  --accent: #5b8cff; --accent-ink: #0d1220; --row-alt: #1e232b; --row-hover: #26304a; --row-sel: #2c3b63;
+  --good: #4cc27e; --warn: #e3a33b; --bad: #ef6b5b; --star: #f2c230; --shadow: 0 8px 30px rgba(0,0,0,.5);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+input[type=text], input[type=number], input[type=search], select { background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px; min-width: 0; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+input[type=number] { -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button { opacity: .5; }
+label { cursor: pointer; }
+[hidden] { display: none !important; }
+
+/* ---------- top bar ---------- */
+header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+header h1 { font-size: 15px; margin: 0 8px 0 0; letter-spacing: .2px; }
+header h1 span { color: var(--accent); }
+header .sep { width: 1px; height: 22px; background: var(--line); }
+header .grow { flex: 1; }
+.filebtn { position: relative; overflow: hidden; }
+.filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+#gameInfo { color: var(--muted); font-size: 12px; text-align: right; }
+#gameInfo b { color: var(--text); font-weight: 600; }
+
+/* ---------- layout ---------- */
+main { flex: 1; display: flex; min-height: 0; }
+aside { width: 330px; min-width: 330px; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+aside.hidden { display: none; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; border-radius: 0; background: transparent; padding: 8px 4px; border-bottom: 2px solid transparent; color: var(--muted); }
+.tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.tabpane { flex: 1; overflow: auto; padding: 10px 12px 16px; display: none; }
+.tabpane.on { display: block; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 10px; padding: 8px 10px 10px; }
+legend { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; padding: 0 4px; }
+.frow { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 6px; margin: 5px 0; }
+.frow > label:first-child, .frow > span:first-child { color: var(--muted); }
+.range { display: grid; grid-template-columns: 1fr 12px 1fr; align-items: center; gap: 2px; }
+.range span { text-align: center; color: var(--muted); }
+.range input { width: 100%; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.checks label { display: flex; gap: 6px; align-items: center; }
+.attrgrid { display: grid; grid-template-columns: 1fr 52px 52px; gap: 3px 6px; align-items: center; }
+.attrgrid .h { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.attrgrid input { width: 100%; padding: 3px 4px; }
+.attrgrid .hidden-attr { color: var(--muted); }
+.attrgrid .hiddenrow { display: none; }
+.aside-foot { border-top: 1px solid var(--line); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.aside-foot .row { display: flex; gap: 6px; }
+.aside-foot .row > * { flex: 1; }
+.note { color: var(--muted); font-size: 12px; }
+.badge { display: inline-block; background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+
+/* ---------- table ---------- */
+#results { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#resultsBar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+#resultsBar .title { font-weight: 600; }
+#resultsBar .grow { flex: 1; }
+#quick { width: 200px; }
+#grid { flex: 1; overflow: auto; position: relative; background: var(--panel); outline: none; }
+#gridInner { position: relative; }
+.ghead { position: sticky; top: 0; z-index: 2; display: flex; background: var(--panel2); border-bottom: 1px solid var(--line); }
+.gcell { flex: none; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 26px; line-height: 26px; border-right: 1px solid var(--line); }
+.ghead .gcell { font-weight: 600; cursor: pointer; position: relative; user-select: none; font-size: 12px; }
+.ghead .gcell.sorted::after { content: attr(data-dir); color: var(--accent); margin-left: 4px; }
+.ghead .gcell .rz { position: absolute; right: -3px; top: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 1; }
+.ghead .gcell.dragover { box-shadow: inset 3px 0 0 var(--accent); }
+.grow-row { position: absolute; left: 0; right: 0; display: flex; cursor: default; }
+.grow-row.alt { background: var(--row-alt); }
+.grow-row:hover { background: var(--row-hover); }
+.grow-row.sel { background: var(--row-sel); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.gcell.star { width: 28px; text-align: center; cursor: pointer; color: var(--muted); padding: 0; }
+.gcell.star.on { color: var(--star); }
+.empty { position: absolute; inset: 60px 0 auto; text-align: center; color: var(--muted); padding: 20px; }
+.empty h2 { color: var(--text); font-size: 18px; margin: 0 0 8px; }
+.empty ol { display: inline-block; text-align: left; margin: 10px 0 0; }
+
+/* ---------- status bar ---------- */
+footer { display: flex; align-items: center; gap: 12px; padding: 4px 12px; background: var(--panel); border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); min-height: 26px; }
+footer .grow { flex: 1; }
+#progress { width: 200px; height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; display: none; border: 1px solid var(--line); }
+#progress div { height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+
+/* ---------- dialogs ---------- */
+dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); box-shadow: var(--shadow); padding: 0; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); }
+dialog::backdrop { background: rgba(10,15,25,.45); }
+.dlg-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.dlg-head h3 { margin: 0; font-size: 15px; flex: 1; }
+.dlg-body { padding: 14px 16px; overflow: auto; }
+.dlg-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid var(--line); }
+.x { border: 0; background: transparent; font-size: 18px; line-height: 1; padding: 2px 6px; color: var(--muted); }
+
+#dlgPlayer { width: 920px; }
+#dlgPlayer .dlg-body { max-height: calc(100vh - 140px); }
+.pi-sub { color: var(--muted); margin-top: 2px; font-size: 12px; }
+.pi-flags { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+.pi-flags span { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 1px 9px; font-size: 12px; }
+.pi-flags span.warn { color: var(--warn); border-color: var(--warn); }
+.pi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.pi-box { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.pi-box h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.kv { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+.kv b { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.kv .dim { color: var(--muted); font-weight: 400; }
+.a-hi { color: var(--good); } .a-lo { color: var(--bad); }
+.pi-wide { grid-column: 1 / -1; }
+.contracts { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+
+#dlgTeam { width: 460px; }
+#clubList { width: 100%; height: 260px; margin-top: 6px; }
+#squadSel { width: 100%; }
+#dlgColumns { width: 520px; }
+#colList { columns: 3; column-gap: 12px; }
+#colList label { display: flex; gap: 6px; align-items: center; padding: 2px 0; break-inside: avoid; }
+#dlgError pre { white-space: pre-wrap; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 10px; border-radius: 6px; max-height: 50vh; overflow: auto; }
+#dlgSettings { width: 520px; }
+
+@media (max-width: 760px) {
+  body { overflow: auto; }
+  main { flex-direction: column; }
+  aside { width: 100%; min-width: 0; max-height: 60vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  #results { min-height: 70vh; }
+  #quick { width: 120px; }
+  #progress { width: 90px; }
+  #colList { columns: 2; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>CM <span>Scout</span></h1>
+  <span class="filebtn"><button class="primary" tabindex="-1">Load saved game…</button><input type="file" id="fileSave" accept=".sav" title="Load a Championship Manager 01/02 saved game (.sav)"></span>
+  <span class="sep"></span>
+  <button id="btnToggleFilters" title="Show/hide the search panel">Search panel</button>
+  <button id="btnTeam" disabled>Team search…</button>
+  <button id="btnSaveSl" disabled title="Export the current list as a .pls scout list for the game's Search folder">Export scout list</button>
+  <button id="btnCsv" disabled title="Export the visible columns of the current list as CSV (semicolon-separated, like the original)">Export CSV</button>
+  <span class="sep"></span>
+  <button id="btnColumns">Columns…</button>
+  <button id="btnSettings">Settings…</button>
+  <span class="grow"></span>
+  <div id="gameInfo">No game loaded</div>
+</header>
+
+<main>
+  <aside id="filters">
+    <div class="tabs" role="tablist">
+      <button class="on" data-tab="tGeneral">General</button>
+      <button data-tab="tContract">Contract</button>
+      <button data-tab="tAttr">Attributes</button>
+    </div>
+    <form id="filterForm" autocomplete="off" style="display:contents">
+      <div class="tabpane on" id="tGeneral">
+        <fieldset><legend>General</legend>
+          <div class="frow"><label for="f_name">Name</label><input type="search" id="f_name" data-f="name" placeholder="any part of name"></div>
+          <div class="frow"><span>Age</span><div class="range" data-range="age"></div></div>
+          <div class="frow"><label for="f_nation">Nation</label><select id="f_nation" data-f="nation"><option value="">Any</option></select></div>
+          <div class="frow"><label for="f_based">Based</label><select id="f_based" data-f="based"><option value="">Any</option></select></div>
+          <div class="frow"><label for="f_division">Division</label><select id="f_division" data-f="division"><option value="">Any</option></select></div>
+          <div class="frow"><span></span><label><input type="checkbox" data-f="eu"> EU national</label></div>
+          <div class="frow"><span>Caps</span><div class="range" data-range="caps"></div></div>
+          <div class="frow"><span>Int. goals</span><div class="range" data-range="intGoals"></div></div>
+        </fieldset>
+        <fieldset><legend>Positions (must play all ticked)</legend>
+          <div class="checks" id="posChecks"></div>
+        </fieldset>
+        <fieldset><legend>Ability</legend>
+          <div class="frow"><span>Ability</span><div class="range" data-range="ca" data-max="200"></div></div>
+          <div class="frow"><span>Potential</span><div class="range" data-range="pa" data-max="200"></div></div>
+          <div class="frow"><span>Scout rating %</span><div class="range" data-range="sr" data-max="100"></div></div>
+        </fieldset>
+        <fieldset><legend>Reputation</legend>
+          <div class="frow"><span>Home</span><div class="range" data-range="homeRep" data-max="10000"></div></div>
+          <div class="frow"><span>Current</span><div class="range" data-range="curRep" data-max="10000"></div></div>
+          <div class="frow"><span>World</span><div class="range" data-range="worldRep" data-max="10000"></div></div>
+          <div class="frow"><span>Club</span><div class="range" data-range="clubRep" data-max="10000"></div></div>
+        </fieldset>
+      </div>
+      <div class="tabpane" id="tContract">
+        <fieldset><legend>Contract</legend>
+          <div class="frow"><label for="f_contract">Contract</label><select id="f_contract" data-f="contract">
+            <option value="">Any</option><option value="0">Free Transfer</option><option value="1">Expired</option><option value="2">Expiring (within 1 year)</option><option value="3">Unprotected</option></select></div>
+          <div class="frow"><span></span><label><input type="checkbox" data-f="bosman"> Leaving on Bosman ruling</label></div>
+          <div class="frow"><span></span><label><input type="checkbox" data-f="transferArranged"> No transfer arranged</label></div>
+          <div class="frow"><label for="f_transfer">Transfer status</label><select id="f_transfer" data-f="transfer"><option value="">Any</option></select></div>
+          <div class="frow"><label for="f_squadStatus">Squad status</label><select id="f_squadStatus" data-f="squadStatus"><option value="">Any</option></select></div>
+          <div class="frow"><label for="f_contractType">Contract type</label><select id="f_contractType" data-f="contractType"><option value="">Any</option></select></div>
+        </fieldset>
+        <fieldset><legend>Release clauses</legend>
+          <div class="frow"><span>Release fee</span><div class="range" data-range="fee"></div></div>
+          <div class="checks" style="grid-template-columns:1fr">
+            <label><input type="checkbox" data-f="minFee"> Minimum fee release clause</label>
+            <label><input type="checkbox" data-f="releg"> Relegation release clause</label>
+            <label style="padding-left:22px"><input type="checkbox" data-f="relegActive"> …only if currently active</label>
+            <label><input type="checkbox" data-f="nonPromo"> Non-promotion release clause</label>
+            <label style="padding-left:22px"><input type="checkbox" data-f="nonPromoActive"> …only if currently active</label>
+            <label><input type="checkbox" data-f="nonPlaying"> Non-playing release clause</label>
+            <label style="padding-left:22px"><input type="checkbox" data-f="nonPlayingActive"> …only if currently active</label>
+          </div>
+          <p class="note" style="margin:6px 0 0">The fee range is a separate filter: players with a contract whose release fee is in range.</p>
+        </fieldset>
+        <fieldset><legend>Money</legend>
+          <div class="frow"><span>Value</span><div class="range" data-range="value"></div></div>
+          <div class="frow"><span>Wage (p/w)</span><div class="range" data-range="wage"></div></div>
+        </fieldset>
+      </div>
+      <div class="tabpane" id="tAttr">
+        <div class="frow" style="grid-template-columns:1fr auto"><input type="search" id="attrFind" placeholder="Find attribute…"><label class="note"><input type="checkbox" id="attrSetOnly"> set only</label></div>
+        <div class="attrgrid" id="attrGrid"></div>
+        <p class="note">Values are 1–20 as converted by the original CM Scout. <span class="hidden-attr">Grey</span> = hidden in game.</p>
+      </div>
+    </form>
+    <div class="aside-foot">
+      <div class="row"><button class="primary" id="btnSearch" disabled>Search <span class="note" style="color:inherit;opacity:.8">(Enter)</span></button><button id="btnReset" style="flex:0 0 auto">Reset</button></div>
+      <div class="row"><select id="presetSel" title="Saved searches"><option value="">Saved searches…</option></select><button id="btnPresetSave" style="flex:0 0 auto">Save</button><button id="btnPresetDel" style="flex:0 0 auto" disabled>Delete</button></div>
+      <div class="note" id="activeFilters"></div>
+    </div>
+  </aside>
+
+  <section id="results">
+    <div id="resultsBar">
+      <span class="title" id="resultsTitle">Players</span>
+      <span class="note" id="resultsCount"></span>
+      <span class="grow"></span>
+      <button id="btnStarred" disabled title="Show the players you have starred (kept in this browser)">★ Starred <span class="badge" id="starCount">0</span></button>
+      <input type="search" id="quick" placeholder="Jump to name…" title="Type to jump to a player name in the current sort order">
+    </div>
+    <div id="grid" tabindex="0">
+      <div id="gridInner"></div>
+      <div class="empty" id="emptyMsg">
+        <h2>Load a saved game to start scouting</h2>
+        <div>Works fully offline in your browser. Nothing is uploaded.</div>
+        <ol>
+          <li>Click <b>Load saved game…</b> and pick a Championship Manager 01/02 <code>.sav</code> save (compressed or not).</li>
+          <li>Set filters on the left and press <b>Search</b>, or use <b>Team search</b>.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span id="status">Ready</span>
+  <div id="progress"><div></div></div>
+  <span class="grow"></span>
+  <span id="cacheInfo"></span>
+</footer>
+
+<!-- Player info -->
+<dialog id="dlgPlayer">
+  <div class="dlg-head"><div style="flex:1"><h3 id="piTitle"></h3><div class="pi-sub" id="piSub"></div></div>
+    <button id="piStar" title="Star / unstar">☆</button><button id="piPrev" title="Previous (←)">‹</button><button id="piNext" title="Next (→)">›</button><button class="x" data-close>×</button></div>
+  <div class="dlg-body" id="piBody"></div>
+</dialog>
+
+<!-- Team search -->
+<dialog id="dlgTeam">
+  <form method="dialog">
+    <div class="dlg-head"><h3>Team search</h3><button class="x" value="cancel">×</button></div>
+    <div class="dlg-body">
+      <label for="clubFind" class="note">Club</label>
+      <input type="search" id="clubFind" placeholder="Type to filter clubs…" style="width:100%">
+      <select id="clubList" size="12"></select>
+      <div style="margin-top:10px" hidden><label for="squadSel" class="note">Squad</label><select id="squadSel"></select></div>
+    </div>
+    <div class="dlg-foot"><button value="cancel">Cancel</button><button class="primary" value="ok" id="teamOk" disabled>Show players</button></div>
+  </form>
+</dialog>
+
+<!-- Columns -->
+<dialog id="dlgColumns">
+  <form method="dialog">
+    <div class="dlg-head"><h3>Columns</h3><button class="x" value="cancel">×</button></div>
+    <div class="dlg-body"><p class="note" style="margin-top:0">Drag column headers in the table to reorder them; drag a header's right edge to resize.</p><div id="colList"></div></div>
+    <div class="dlg-foot"><button value="default" id="colDefault" style="margin-right:auto">Default columns</button><button value="cancel">Close</button></div>
+  </form>
+</dialog>
+
+<!-- Settings -->
+<dialog id="dlgSettings">
+  <form method="dialog">
+    <div class="dlg-head"><h3>Settings</h3><button class="x" value="cancel">×</button></div>
+    <div class="dlg-body">
+      <fieldset><legend>Storage (this browser only)</legend>
+        <div><label><input type="checkbox" id="cacheGame"> Remember the last loaded game between visits</label></div>
+        <div class="note" style="margin:6px 0" id="storageInfo"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="forgetGame">Forget cached game</button><button type="button" id="clearStars">Clear starred players</button><button type="button" id="resetAll">Reset all settings</button></div>
+      </fieldset>
+      <fieldset><legend>Scout lists (.pls)</legend>
+        <label><input type="checkbox" id="plsInterested"> Save scout lists with the "Interested" filter</label>
+      </fieldset>
+      <fieldset><legend>Appearance</legend>
+        <div class="frow"><label for="themeSel">Theme</label><select id="themeSel"><option value="">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      </fieldset>
+      <p class="note">Port of CM Scout 2.00 by Michael Nygreen (nygreen.net) for Championship Manager 01/02.</p>
+    </div>
+    <div class="dlg-foot"><button class="primary" value="ok">Done</button></div>
+  </form>
+</dialog>
+
+<!-- Error -->
+<dialog id="dlgError">
+  <form method="dialog">
+    <div class="dlg-head"><h3 id="errTitle">Error</h3><button class="x" value="ok">×</button></div>
+    <div class="dlg-body"><pre id="errText"></pre></div>
+    <div class="dlg-foot"><button class="primary" value="ok">OK</button></div>
+  </form>
+</dialog>
+
+<!-- ======================================================================
+     Binary parser. Direct port of CM0102/CMDatabase/*.pas (CM Scout 2.00).
+     Runs in a Web Worker (built from this script's text) or on the main
+     thread as a fallback.
+     ====================================================================== -->
+<script id="parser-src">
+var CMParser = (function () {
+  'use strict';
+  function CorruptError(msg) { var e = new Error(msg); e.name = 'CorruptError'; return e; }
+  var BAD_SAVE = 'The file doesn\'t seem to be a valid Championship Manager 01/02 saved game.';
+  function parseSave(buf, report) {
+    if (looksLikeCM0102(buf)) return parseCM0102(buf, report);
+    throw CorruptError(BAD_SAVE);
+  }
+
+  // ====================================================================
+  // Championship Manager 01/02. Port of CM0102/CMDatabase/*.pas (CM Scout 2.00).
+  // The save is a table of named blocks of fixed-size records, optionally
+  // run-length encoded (CMCompressedFileStream.pas).
+  // ====================================================================
+  var cp1252 = new TextDecoder('windows-1252');
+  var CM0102_BLOCK = 268, CM0102_SIZES = { nation: 290, division: 107, club: 581, name: 60, player: 70, staff: 110, contract: 80 };
+  // TPlayer field order (CMDataRepresentation.pas)
+  var CM0102_POS = ['Goalkeeper','Sweeper','Defender','DefensiveMidfielder','Midfielder','AttackingMidfielder','Attacker','WingBack','RightSide','LeftSide','Central','FreeRole'];
+  var CM0102_ATTR = ['Acceleration','Aggression','Agility','Anticipation','Balance','Bravery','Consistency','Corners','Crossing','Decisions','Dirtiness','Dribbling','Finishing','Flair','FreeKicks','Handling','Heading','ImportantMatches','InjuryProneness','Jumping','Leadership','LeftFoot','LongShots','Marking','Movement','NaturalFitness','OneOnOnes','PlayerPace','Passing','Penalties','Positioning','Reflexes','RightFoot','Stamina','Strength','Tackling','Teamwork','Technique','ThrowIns','Versatility','Vision','WorkRate'];
+  // TStaff personality bytes at offset 86
+  var CM0102_PERS = ['Adaptability','Ambition','Determination','Loyality','Pressure','Professionalism','Sportsmanship','Temperament'];
+  var CM0102_KEYS = CM0102_POS.concat(CM0102_ATTR, CM0102_PERS);
+  var CM0102_STRIDE = CM0102_KEYS.length;
+  // ScoutRatingUnit.pas, generated from the source: [divisor, [[attribute, weight, mode]]]
+  // mode 0: value/20*w, 1: (21-value)/20*w, 2: CurrentAbility/200*w
+  var CM0102_RATINGS = {"GK":[222,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",1,0],["CurrentAbility",25,2],["Acceleration",4,0],["Aggression",3,0],["Agility",12,0],["Anticipation",6,0],["Balance",8,0],["Bravery",6,0],["Consistency",7,0],["Decisions",6,0],["Handling",20,0],["Heading",1,0],["ImportantMatches",4,0],["InjuryProneness",3,1],["Jumping",6,0],["Leadership",8,0],["LeftFoot",3,0],["NaturalFitness",3,0],["OneOnOnes",8,0],["Passing",1,0],["Positioning",20,0],["Reflexes",20,0],["RightFoot",3,0],["Stamina",1,0],["Strength",4,0],["Tackling",6,0],["Teamwork",4,0]]],"D":[261,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",9,0],["Aggression",5,0],["Anticipation",10,0],["Balance",2,0],["Bravery",5,0],["Consistency",6,0],["Crossing",4,0],["Decisions",6,0],["Dirtiness",4,1],["Heading",9,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",6,0],["Leadership",6,0],["LeftFoot",5,0],["Marking",20,0],["NaturalFitness",5,0],["PlayerPace",10,0],["Passing",7,0],["Positioning",20,0],["RightFoot",5,0],["Stamina",7,0],["Strength",6,0],["Tackling",20,0],["Teamwork",6,0],["Versatility",3,0],["WorkRate",6,0]]],"DM":[251,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",4,0],["Aggression",8,0],["Anticipation",6,0],["Balance",2,0],["Bravery",7,0],["Consistency",6,0],["Crossing",2,0],["Decisions",9,0],["Dirtiness",4,1],["Heading",8,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",5,0],["Leadership",6,0],["LeftFoot",5,0],["Marking",8,0],["NaturalFitness",5,0],["PlayerPace",6,0],["Passing",12,0],["Positioning",18,0],["RightFoot",5,0],["Stamina",7,0],["Strength",6,0],["Tackling",13,0],["Teamwork",11,0],["Versatility",4,0],["WorkRate",15,0]]],"M":[258,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",7,0],["Aggression",3,0],["Anticipation",8,0],["Balance",2,0],["Bravery",3,0],["Consistency",6,0],["Crossing",5,0],["Decisions",7,0],["Dirtiness",2,1],["Dribbling",6,0],["Finishing",2,0],["Flair",5,0],["Heading",5,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",3,0],["Leadership",5,0],["LeftFoot",5,0],["Marking",7,0],["Movement",5,0],["NaturalFitness",5,0],["PlayerPace",6,0],["Passing",18,0],["Positioning",6,0],["RightFoot",5,0],["Stamina",7,0],["Strength",6,0],["Tackling",4,0],["Teamwork",10,0],["Technique",6,0],["Versatility",3,0],["Vision",12,0],["WorkRate",15,0]]],"AM":[276,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",7,0],["Aggression",5,0],["Anticipation",8,0],["Balance",2,0],["Bravery",3,0],["Consistency",6,0],["Crossing",7,0],["Decisions",9,0],["Dirtiness",1,1],["Dribbling",15,0],["Finishing",10,0],["Flair",7,0],["Heading",5,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",3,0],["Leadership",5,0],["LeftFoot",5,0],["LongShots",11,0],["Movement",10,0],["NaturalFitness",5,0],["PlayerPace",9,0],["Passing",15,0],["RightFoot",5,0],["Stamina",11,0],["Strength",6,0],["Teamwork",10,0],["Technique",7,0],["Versatility",3,0],["Vision",15,0],["WorkRate",2,0]]],"W":[295,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",12,0],["Aggression",7,0],["Anticipation",6,0],["Balance",2,0],["Bravery",3,0],["Consistency",6,0],["Crossing",15,0],["Decisions",10,0],["Dirtiness",1,1],["Dribbling",20,0],["Finishing",7,0],["Flair",10,0],["Heading",8,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",5,0],["Leadership",3,0],["LeftFoot",5,0],["Movement",13,0],["NaturalFitness",6,0],["PlayerPace",9,0],["Passing",10,0],["RightFoot",5,0],["Stamina",11,0],["Strength",8,0],["Teamwork",7,0],["Technique",9,0],["Versatility",3,0],["Vision",15,0],["WorkRate",10,0]]],"A":[247,[["Adaptability",3,0],["Ambition",5,0],["Determination",6,0],["Loyality",4,0],["Pressure",6,0],["Professionalism",3,0],["Sportsmanship",2,0],["Temperament",5,0],["CurrentAbility",25,2],["Acceleration",14,0],["Aggression",7,0],["Anticipation",15,0],["Balance",2,0],["Bravery",3,0],["Consistency",5,0],["Decisions",5,0],["Dribbling",8,0],["Finishing",20,0],["Flair",9,0],["Heading",5,0],["ImportantMatches",6,0],["InjuryProneness",4,1],["Jumping",3,0],["Leadership",1,0],["LeftFoot",5,0],["LongShots",7,0],["Movement",10,0],["NaturalFitness",4,0],["PlayerPace",13,0],["Passing",10,0],["RightFoot",5,0],["Stamina",7,0],["Strength",6,0],["Teamwork",2,0],["Technique",4,0],["Versatility",3,0],["Vision",3,0],["WorkRate",2,0]]]};
+
+  function looksLikeCM0102(buf) {
+    if (buf.byteLength < 12) return false;
+    var dv = new DataView(buf), n = dv.getInt32(8, true);
+    if (n < 1 || n > 4096 || 12 + n * CM0102_BLOCK > buf.byteLength) return false;
+    var names = cm0102Blocks(buf).map(function (b) { return b.name; });
+    return names.indexOf('staff.dat') >= 0 && names.indexOf('player.dat') >= 0;
+  }
+  function cString(bytes, off, len) {
+    var end = off; while (end < off + len && bytes[end] !== 0) end++;
+    return cp1252.decode(bytes.subarray(off, end));
+  }
+  function cm0102Blocks(buf) {
+    var dv = new DataView(buf), bytes = new Uint8Array(buf), n = dv.getInt32(8, true), out = [];
+    for (var j = 0; j < n; j++) {
+      var o = 12 + j * CM0102_BLOCK;
+      out.push({ pos: dv.getInt32(o, true), size: dv.getInt32(o + 4, true), name: cString(bytes, o + 8, 260) });
+    }
+    return out;
+  }
+  // Reads `n` bytes of a block, undoing the run-length encoding when compressed:
+  // a byte <= 128 is a literal; a byte > 128 repeats the following byte (byte - 128) times.
+  function BlockStream(bytes, pos, compressed, label) { this.b = bytes; this.p = pos; this.c = compressed; this.run = 0; this.val = 0; this.label = label; }
+  BlockStream.prototype.read = function (n) {
+    var out = new Uint8Array(n), b = this.b;
+    if (!this.c) {
+      if (this.p < 0 || this.p + n > b.length) throw CorruptError(this.label + ' runs past the end of the file.');
+      out.set(b.subarray(this.p, this.p + n)); this.p += n; return out;
+    }
+    var i = 0;
+    while (i < n) {
+      if (this.run > 0) { var t = Math.min(this.run, n - i); out.fill(this.val, i, i + t); i += t; this.run -= t; continue; }
+      if (this.p >= b.length) throw CorruptError(this.label + ' runs past the end of the file.');
+      var x = b[this.p++];
+      if (x <= 128) out[i++] = x;
+      else { if (this.p >= b.length) throw CorruptError(this.label + ' runs past the end of the file.'); this.run = x - 128; this.val = b[this.p++]; }
+    }
+    return out;
+  };
+
+  function parseCM0102(buf, report) {
+    report = report || function () {};
+    var dv0 = new DataView(buf), bytes = new Uint8Array(buf);
+    var compressed = dv0.getInt32(0, true) === 4;
+    report('Loading Blocks', 0);
+    var blocks = cm0102Blocks(buf);
+    function block(name) {
+      for (var j = 0; j < blocks.length; j++) if (blocks[j].name === name) return blocks[j];
+      throw CorruptError('The saved game has no ' + name + ' block.');
+    }
+    function stream(name) { var b = block(name); return new BlockStream(bytes, b.pos, compressed, name); }
+    function table(name, label, size) {
+      report('Loading ' + label, 0);
+      var b = block(name), n = Math.floor(b.size / size);
+      var data = new BlockStream(bytes, b.pos, compressed, name).read(n * size);
+      return { n: n, size: size, u8: data, dv: new DataView(data.buffer) };
+    }
+    function idx(i, n) { return i >= 0 && i < n ? i : -1; }
+    function date(dv, o) { return dv.getUint16(o + 2, true) * 1000 + dv.getUint16(o, true); } // packed yyyyddd
+
+    // general.dat: game date after 3944 bytes
+    var g = stream('general.dat'); g.read(3944);
+    var gd = g.read(8), gdv = new DataView(gd.buffer), gameDate = date(gdv, 0);
+
+    var T = table('nation.dat', 'Nations', CM0102_SIZES.nation);
+    var nations = [];
+    for (var j = 0; j < T.n; j++) {
+      var o = j * T.size;
+      nations.push({ uid: T.dv.getInt32(o, true), n: cString(T.u8, o + 4, 51), s: cString(T.u8, o + 56, 26), nat: cString(T.u8, o + 87, 26), ct: 1, eu: T.u8[o + 127] === 2 });
+    }
+    var nN = nations.length;
+    T = table('club_comp.dat', 'Divisions', CM0102_SIZES.division);
+    var comps = [];
+    for (j = 0; j < T.n; j++) {
+      o = j * T.size;
+      comps.push({ uid: T.dv.getInt32(o, true), n: cString(T.u8, o + 4, 51), s: cString(T.u8, o + 56, 26), nation: idx(T.dv.getInt32(o + 93, true), nN) });
+    }
+    T = table('club.dat', 'Clubs', CM0102_SIZES.club);
+    var clubs = [], squads = [];
+    for (j = 0; j < T.n; j++) {
+      o = j * T.size;
+      clubs.push({ uid: T.dv.getInt32(o, true), n: cString(T.u8, o + 4, 51), s: cString(T.u8, o + 56, 26), ct: 0, lb: false,
+        nation: idx(T.dv.getInt32(o + 83, true), nN), div: idx(T.dv.getInt32(o + 87, true), comps.length), rep: T.dv.getUint16(o + 128, true), teams: [j] });
+      var sq = [];
+      for (var s = 0; s < 50; s++) sq.push(T.dv.getInt32(o + 215 + s * 4, true));
+      squads.push(sq);
+    }
+    var nC = clubs.length;
+    function names(file, label) {
+      var t = table(file, label, CM0102_SIZES.name), out = [];
+      for (var k = 0; k < t.n; k++) { var q = k * t.size; out.push({ n: cString(t.u8, q, 51), id: t.dv.getInt32(q + 51, true) }); }
+      return out;
+    }
+    var first = names('first_names.dat', 'First Names'), second = names('second_names.dat', 'Second Names'), common = names('common_names.dat', 'Common Names');
+    var PL = table('player.dat', 'Players', CM0102_SIZES.player);
+    var ST = table('staff.dat', 'Staff', CM0102_SIZES.staff);
+
+    // contract.dat: two counts, `pre` 21-byte records (the last one carries the real count), then 80-byte contracts
+    report('Loading Contracts', 0);
+    var cs = stream('contract.dat'), head = new DataView(cs.read(8).buffer);
+    var pre = head.getInt32(0, true), nK = head.getInt32(4, true);
+    if (pre < 0 || pre > 1e6) throw CorruptError('Contract data seems to be corrupt (pre count ' + pre + ').');
+    var last = null;
+    for (j = 0; j < pre; j++) last = cs.read(21);
+    if (pre > 0) nK = new DataView(last.buffer).getInt32(17, true);
+    if (nK < 0 || nK > 1e7) throw CorruptError('Contract data seems to be corrupt (count ' + nK + ').');
+    var KD = cs.read(nK * CM0102_SIZES.contract), kdv = new DataView(KD.buffer);
+    var nS = ST.n, contractOf = new Array(nS), loanOf = new Array(nS);
+    var staffClub = new Int32Array(nS);
+    for (j = 0; j < nS; j++) staffClub[j] = idx(ST.dv.getInt32(j * ST.size + 57, true), nC);
+    for (j = 0; j < nK; j++) {
+      o = j * CM0102_SIZES.contract;
+      var c = { club: idx(kdv.getInt32(o + 4, true), nC), w: kdv.getInt32(o + 12, true), gb: kdv.getInt32(o + 16, true), ab: kdv.getInt32(o + 20, true), cb: kdv.getInt32(o + 24, true),
+        np: KD[o + 28], mf: KD[o + 29], npl: KD[o + 30], rel: KD[o + 31], mj: KD[o + 32], fee: kdv.getInt32(o + 33, true),
+        st: date(kdv, o + 37), e: date(kdv, o + 45), t: KD[o + 53], b: KD[o + 73] !== 0, arr: idx(kdv.getInt32(o + 74, true), nC), ts: KD[o + 78], ss: KD[o + 79] };
+      var sid = kdv.getInt32(o, true); // contract ID = staff list index
+      if (sid >= 0 && sid < nS) {
+        if (!contractOf[sid]) contractOf[sid] = c;
+        else if (contractOf[sid].club === staffClub[sid]) { loanOf[sid] = contractOf[sid]; contractOf[sid] = c; }
+        else loanOf[sid] = c;
+      }
+    }
+
+    // PlayerConvert (CMDatabase.pas)
+    function high(a, ca) { var t = a / 10 + ca / 20 + 10, r = t * t / 30 + t / 3 + 0.5; return Math.trunc(r < 1 ? 1 : r > 20 ? 20 : r); }
+    function low(a, ca) { var t = a / 10 + ca / 200 + 10, r = t * t / 30 + t / 3 + 0.5; return Math.trunc(r < 1 ? 1 : r > 20 ? 20 : r); }
+    var AI = {}; CM0102_ATTR.forEach(function (k, i) { AI[k] = 12 + i; });
+    var ALWAYS = ['Anticipation','Decisions','Heading','LongShots','Passing','Penalties','Positioning','Tackling'];
+    var GK_HIGH = ['Handling','Reflexes','OneOnOnes'], OUT_HIGH = ['Crossing','Dribbling','Finishing','Marking','Movement','ThrowIns','Vision'];
+
+    report('Loading Players', 0);
+    var nPl = 0, s2p = new Int32Array(nS).fill(-1);
+    for (j = 0; j < nS; j++) { var pr = ST.dv.getInt32(j * ST.size + 97, true); if (pr >= 0 && pr < PL.n) s2p[j] = nPl++; }
+    var KI = {}; CM0102_KEYS.forEach(function (k, i) { KI[k] = i; });
+    var attr = new Int8Array(nPl * CM0102_STRIDE), rating = new Float32Array(nPl * 8), bestPos = new Int8Array(nPl), players = new Array(nPl);
+    var raw = new Int8Array(54), step = Math.max(1, nPl >> 6), pi = 0;
+    function nameOf(arr, i) { return i >= 0 && i < arr.length ? arr[i] : null; }
+    for (j = 0; j < nS; j++) {
+      if (s2p[j] < 0) continue;
+      var so = j * ST.size, sdv = ST.dv, po = sdv.getInt32(so + 97, true) * PL.size, pdv = PL.dv;
+      var ca = pdv.getUint16(po + 5, true), k;
+      for (k = 0; k < 54; k++) raw[k] = pdv.getInt8(po + 15 + k);
+      var gk = raw[0] >= 15;
+      ALWAYS.forEach(function (key) { raw[AI[key]] = high(raw[AI[key]], ca); });
+      GK_HIGH.forEach(function (key) { raw[AI[key]] = (gk ? high : low)(raw[AI[key]], ca); });
+      OUT_HIGH.forEach(function (key) { raw[AI[key]] = (gk ? low : high)(raw[AI[key]], ca); });
+      var ao = pi * CM0102_STRIDE;
+      for (k = 0; k < 54; k++) attr[ao + k] = raw[k];
+      for (k = 0; k < 8; k++) attr[ao + 54 + k] = ST.u8[so + 86 + k];
+
+      // scout ratings
+      var x = function (key) { return attr[ao + KI[key]]; };
+      ['GK', 'D', 'DM', 'M', 'AM', 'W', 'A'].forEach(function (pos, ri) {
+        var def = CM0102_RATINGS[pos], sum = 0;
+        def[1].forEach(function (t) { sum += t[2] === 2 ? ca / 200 * t[1] : t[2] === 1 ? (21 - x(t[0])) / 20 * t[1] : x(t[0]) / 20 * t[1]; });
+        rating[pi * 8 + ri] = sum / def[0] * 100;
+      });
+      var best = 0, bp = -1, R = function (i) { return rating[pi * 8 + i]; };
+      function cand(i, ok) { if (ok && R(i) > best) { best = R(i); bp = i; } }
+      cand(0, x('Goalkeeper') >= 15);
+      cand(1, x('Defender') >= 15 || x('Sweeper') >= 15);
+      cand(2, x('DefensiveMidfielder') >= 15);
+      cand(3, x('Midfielder') >= 15);
+      cand(4, x('AttackingMidfielder') >= 15);
+      cand(5, (x('Midfielder') >= 15 || x('AttackingMidfielder') >= 15 || x('WingBack') >= 15) && (x('LeftSide') >= 15 || x('RightSide') >= 15));
+      cand(6, x('Attacker') >= 15);
+      rating[pi * 8 + 7] = best; bestPos[pi] = bp;
+
+      var fN = nameOf(first, sdv.getInt32(so + 4, true)), sN = nameOf(second, sdv.getInt32(so + 8, true)), cN = nameOf(common, sdv.getInt32(so + 12, true));
+      var club = staffClub[j];
+      players[pi] = {
+        i: pi, uid: sdv.getInt32(so, true), si: j,
+        f: fN ? fN.n : null, s: sN ? sN.n : null, c: cN && cN.n !== '' ? cN.n : null,
+        fid: fN ? fN.id : -1, sid: sN ? sN.id : -1, cid: cN ? cN.id : -1,
+        dob: date(sdv, so + 16), dobRaw: [sdv.getUint16(so + 16, true), sdv.getUint16(so + 18, true), sdv.getInt32(so + 20, true)],
+        nat: idx(sdv.getInt32(so + 26, true), nN), nat2: idx(sdv.getInt32(so + 30, true), nN), apps: ST.u8[so + 34], goals: ST.u8[so + 35],
+        club: club, team: club, joined: date(sdv, so + 62), clubExp: date(sdv, so + 70), wage: sdv.getInt32(so + 78, true), val: sdv.getInt32(so + 82, true),
+        ca: ca, pa: pdv.getUint16(po + 7, true), hr: pdv.getUint16(po + 9, true), cr: pdv.getUint16(po + 11, true), wr: pdv.getUint16(po + 13, true),
+        num: PL.u8[po + 4], morale: PL.u8[po + 69], k: contractOf[j] || null, loan: loanOf[j] || null, an: []
+      };
+      if (pi % step === 0) report('Calculating Scout Ratings', pi / nPl);
+      pi++;
+    }
+    // one "team" per club: its 50 squad slots (players only)
+    var teams = clubs.map(function (c, ci) {
+      return { tt: 0, ct: 0, c: ci, rep: c.rep, div: c.div, uid: c.uid,
+        pl: squads[ci].filter(function (si) { return si >= 0 && si < nS && s2p[si] >= 0; }).map(function (si) { return s2p[si]; }) };
+    });
+    report('Done', 1);
+    return { game: 'cm0102', version: 'CM 01/02', compressed: compressed, gameDate: gameDate, gameDateRaw: [gdv.getUint16(0, true), gdv.getUint16(2, true), gdv.getInt32(4, true)],
+      clubs: clubs, nations: nations, comps: comps, teams: teams, players: players, attr: attr, rating: rating, bestPos: bestPos,
+      attrKeys: CM0102_KEYS, stride: CM0102_STRIDE, counts: { people: nS } };
+  }
+
+  return { parseSave: parseSave, CM0102_KEYS: CM0102_KEYS, CM0102_RATINGS: CM0102_RATINGS };
+})();
+</script>
+
+<script>
+(function () {
+'use strict';
+var $ = function (s, el) { return (el || document).querySelector(s); };
+var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+var LS_KEY = 'cmscout.v1';
+
+// ======================================================================
+// State
+// ======================================================================
+var DB = null;            // parsed save (see CMParser.convert)
+var view = { list: [], mode: 'none', title: 'Players', sel: -1 };
+var settings = loadSettings();
+var uidIndex = null;
+
+function defaultSettings() {
+  return { cacheGame: true, theme: '', panel: true, interested: false, games: {} };
+}
+function loadSettings() {
+  var s = defaultSettings();
+  try { var raw = localStorage.getItem(LS_KEY); if (raw) Object.assign(s, JSON.parse(raw)); } catch (e) { /* storage unavailable */ }
+  return s;
+}
+function G() { return 'cm0102'; }
+function P() { return GAME; }
+// Columns, sort, current filters, saved searches and stars (kept under games.cm0102).
+function gs() {
+  var g = settings.games[G()];
+  if (!g) g = settings.games[G()] = {};
+  if (!g.columns) g.columns = defaultColumns();
+  if (!g.sort) g.sort = { col: 'sr', dir: 1 };
+  if (!g.filters) g.filters = {};
+  if (!g.presets) g.presets = {};
+  if (!g.stars) g.stars = {};
+  if (!g._norm) { normalizeColumns(g.columns); Object.defineProperty(g, '_norm', { value: true, enumerable: false }); }
+  return g;
+}
+var saveTimer = 0;
+function saveSettings() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () { try { localStorage.setItem(LS_KEY, JSON.stringify(settings)); } catch (e) { /* ignore */ } }, 150);
+}
+
+// IndexedDB: the parsed game is far too large for localStorage
+var idb = (function () {
+  var dbp = null;
+  function open() {
+    if (!dbp) dbp = new Promise(function (res, rej) {
+      try {
+        var q = indexedDB.open('cmscout', 1);
+        q.onupgradeneeded = function () { q.result.createObjectStore('kv'); };
+        q.onsuccess = function () { res(q.result); };
+        q.onerror = function () { rej(q.error); };
+      } catch (e) { rej(e); }
+    });
+    return dbp;
+  }
+  function tx(mode, fn) {
+    return open().then(function (db) {
+      return new Promise(function (res, rej) {
+        var t = db.transaction('kv', mode), st = t.objectStore('kv'), out = fn(st);
+        t.oncomplete = function () { res(out && out.result); };
+        t.onerror = function () { rej(t.error); };
+        t.onabort = function () { rej(t.error); };
+      });
+    });
+  }
+  return {
+    get: function (k) { return tx('readonly', function (s) { return s.get(k); }); },
+    set: function (k, v) { return tx('readwrite', function (s) { s.put(v, k); }); },
+    del: function (k) { return tx('readwrite', function (s) { s.delete(k); }); }
+  };
+})();
+
+// ======================================================================
+// Model helpers
+// ======================================================================
+function dParts(p) { return { y: Math.floor(p / 1000), d: p % 1000 }; }
+function dayNum(p) { var x = dParts(p); return Date.UTC(x.y, 0, 1 + x.d) / 86400000; }
+function fmtDate(p) { var t = new Date(dayNum(p) * 86400000); return pad(t.getUTCDate()) + '.' + pad(t.getUTCMonth() + 1) + '.' + t.getUTCFullYear(); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function age(p, today) { var g = dParts(today || DB.gameDate), b = dParts(p.dob); return g.y - b.y - (g.d < b.d ? 1 : 0); } // CMAge
+function thousands(n) { return Math.round(n).toLocaleString('en-GB'); }
+function money(n) { return '£' + thousands(n); }
+
+function at(p, key) { return DB.attr[p.i * DB.stride + DB.ki[key]]; }
+function nation(i) { return i >= 0 ? DB.nations[i] : null; }
+function team(p) { return p.team >= 0 ? DB.teams[p.team] : null; }
+function container(ct, c) { return c < 0 ? null : ct === 0 ? DB.clubs[c] : DB.nations[c]; }
+function teamContainer(t) { return t ? container(t.ct, t.c) : null; }
+var TEAM_SUFFIX = { 1: 'Reserves', 3: 'B', 9: 'U23', 10: 'U21', 11: 'U19', 12: 'U18', 13: 'C', 14: '(A)', 15: 'II', 16: '2', 17: '3', 18: 'U20' };
+function squadNameOf(t) { var c = teamContainer(t); if (!c) return ''; var sfx = TEAM_SUFFIX[t.tt]; return c.s + (sfx ? ' ' + sfx : ''); }
+
+function listName(p) {
+  if (p.c !== null) return p.c;
+  var r = p.s !== null ? p.s : '';
+  if (p.f !== null) r = r === '' ? p.f : r + ', ' + p.f;
+  return r;
+}
+function displayName(p) {
+  if (p.c !== null) return p.c;
+  var r = p.f !== null ? p.f : '';
+  if (p.s !== null) r = r === '' ? p.s : r + ' ' + p.s;
+  return r;
+}
+function fullName(p) { return (p.f !== null ? p.f + ' ' : '') + (p.s !== null ? p.s : ''); }
+
+function bestRating(p) { return DB.rating[p.i * 8 + 7]; }
+
+// ======================================================================
+// Columns (same set and order as the original list view)
+// ======================================================================
+var POS_COLS = ['Goalkeeper','Sweeper','Defender','DefensiveMidfielder','Midfielder','AttackingMidfielder','Attacker','WingBack','FreeRole','RightSide','LeftSide','Central'];
+function humanize(k) { return k.replace(/([a-z])([A-Z])/g, '$1 $2').replace('Of ', 'of ').replace('On Ones', 'on Ones'); }
+function yesNo(b) { return b ? 'Yes' : 'No'; }
+
+function defaultColumns() { var pr = P(); return { order: pr.columns.map(function (c) { return c.id; }), visible: pr.defaultVisible.slice(), widths: {} }; }
+function normalizeColumns(cs) { // columns added in later versions go at the end
+  var pr = P();
+  cs.order = cs.order.filter(function (id) { return pr.byId[id]; });
+  pr.columns.forEach(function (c) { if (cs.order.indexOf(c.id) < 0) cs.order.push(c.id); });
+  cs.visible = cs.visible.filter(function (id) { return pr.byId[id]; });
+  if (!cs.visible.length) cs.visible = ['name'];
+}
+function colById(id) { return P().byId[id]; }
+
+// ======================================================================
+// Championship Manager 01/02 (port of CM0102/CMFunctions.pas, SearchUnit.pas,
+// frmPlayerUnit.pas, ScoutList.pas from CM Scout 2.00)
+// ======================================================================
+var C2_ATTRS = ['Acceleration','Adaptability','Aggression','Agility','Ambition','Anticipation','Balance','Bravery','Consistency','Corners','Vision','Crossing','Decisions','Determination','Dirtiness','Dribbling','Finishing','Flair','Handling','Heading','Leadership','ImportantMatches','InjuryProneness','Jumping','LongShots','Loyality','Marking','NaturalFitness','Movement','OneOnOnes','PlayerPace','Passing','Penalties','Positioning','Pressure','Professionalism','Reflexes','FreeKicks','Sportsmanship','Stamina','Strength','Tackling','Teamwork','Technique','Temperament','ThrowIns','Versatility','WorkRate','LeftFoot','RightFoot'];
+// In-game names used by the original's columns and player window
+var C2_LABELS = { Vision: 'Creativity', Leadership: 'Influence', Movement: 'Off The Ball', PlayerPace: 'Pace', FreeKicks: 'Set Pieces' };
+var C2_HIDDEN = ['Adaptability','Ambition','Loyality','Pressure','Professionalism','Sportsmanship','Temperament','Consistency','Dirtiness','ImportantMatches','InjuryProneness','Versatility'];
+var C2_SQUAD = ['Uncertain', 'Indispensable To The Club', 'Important First Team Player', 'Used In A Squad Rotation System', 'Backup For The First Team', 'Hot Prospect For The Future', 'Decent Young Player', 'Not Needed By The Club', 'On Trial'];
+var C2_SQUAD_LONG = ['Uncertain', 'This player is indispensable to the club', 'This player is important first team player', 'This player is used in a squad rotation system', 'This player is backup for the first team', 'This player is hot prospect for the future', 'This player is decent young player', 'This player is not needed by the club', 'This player is on trial'];
+var C2_CONTRACT_TYPES = [['Part Time Monthly Contract', [0x81, 0xC1]], ['Part Time Contract', [0x82, 0xC2]], ['Part Time Trial Contract', [0x85, 0xC5]], ['Part Time Loan Contract', [0x86, 0x87, 0xC6, 0xC7]],
+  ['Full Time Monthly Contract', [0x01, 0x41]], ['Full Time Contract', [0x02, 0x42]], ['Full Time Trial Contract', [0x05, 0x45]], ['Full Time Loan Contract', [0x06, 0x07, 0x46, 0x47]]];
+function c2Label(k) { return C2_LABELS[k] || humanize(k); }
+function c2ContractType(t) { // ContractTypeToStr; bit 0x40 is ignored, bit 0x80 means part time
+  var lo = t & 0x3F, b = lo === 0 ? 'Invalid' : lo === 1 ? 'Monthly Contract' : lo === 2 ? 'Contract' : lo <= 4 ? 'N/A' : lo === 5 ? 'Trial Contract' : lo <= 7 ? 'Loan Contract' : 'Contract';
+  return b === 'Invalid' || b === 'N/A' ? b : (t & 0x80 ? 'Part Time ' : 'Full Time ') + b;
+}
+function c2Transfer(ts) { return ts & 1 ? 'Transfer listed by club' : ts & 8 ? 'Transfer listed by request' : ts & 2 ? 'Listed for loan' : 'Unknown'; }
+function c2TransferIdx(ts) { return ts & 1 ? 0 : ts & 8 ? 1 : ts & 2 ? 2 : -1; }
+function c2SquadIdx(ss) { // SquadStatusToStr mask cascade
+  var masks = [240, 224, 208, 192, 176, 160, 144, 128, 112];
+  for (var j = 0; j < masks.length; j++) if ((ss & masks[j]) === 0) return j;
+  return -1;
+}
+function c2Club(p) { return p.club >= 0 ? DB.clubs[p.club] : null; }
+function c2Nations(p) { var n = nation(p.nat); if (!n) return ''; var n2 = nation(p.nat2); return n.s + (n2 ? '/' + n2.s : ''); }
+function c2Fee(flag) { return function (p) { return p.k && p.k[flag] > 0 ? p.k.fee : 0; }; }
+function c2IsEU(p) { var n = nation(p.nat), n2 = nation(p.nat2); return !!((n && n.eu) || (n2 && n2.eu)); }
+function c2Based(p) { var c = c2Club(p); return c ? c.nation : p.nat; }
+function c2PosParts(p, long) { // ShortPosition / FullPosition
+  var T = 14, x = function (k) { return at(p, k); }, r = '', add = function (s, l) { var v = long ? l : s; r = r ? r + '/' + v : v; };
+  if (x('Goalkeeper') > T) add('GK', 'Goalkeeper');
+  if (x('Sweeper') > T) add('SW', 'Sweeper');
+  if (x('Defender') > T) add('D', 'Defender');
+  if (x('DefensiveMidfielder') > T) add('DM', 'Defensive Midfielder');
+  var dm = x('DefensiveMidfielder') > T, am = x('AttackingMidfielder') > T, m = x('Midfielder') > T, a = x('Attacker') > T, wb = x('WingBack') > T;
+  if (m && !dm && !am) add('M', 'Midfielder');
+  if ((am && !dm && (!a || m)) || (wb && !dm && (!a || m))) add('AM', 'Attacking Midfielder');
+  if (a) { if (am || x('LeftSide') > T || x('RightSide') > T || x('FreeRole') > T) add('F', 'Forward'); else add('S', 'Striker'); }
+  var sides = [];
+  if (x('Goalkeeper') < 15) {
+    if (x('RightSide') > T) sides.push(long ? 'Right' : 'R');
+    if (x('LeftSide') > T) sides.push(long ? 'Left' : 'L');
+    if (x('Central') > T) sides.push(long ? 'Central' : 'C');
+  }
+  return long ? r + (sides.length ? ' (' + sides.join('/') + ')' : '') : (r + ' ' + sides.join('')).trim();
+}
+function c2RatingText(p) { var b = DB.bestPos[p.i]; return bestRating(p).toFixed(2) + ' % (' + (b >= 0 ? ['G', 'D', 'DM', 'M', 'AM', 'W', 'A'][b] : '?') + ')'; }
+// Unprotected contract (TPlayerSearch.CheckContract case 3 / frmPlayerUnit "Protected")
+function c2Protected(p, gd) {
+  var k = p.k; if (!k) return true;
+  if (k.st < 2001244) return true;
+  var years = age({ dob: p.dob }, k.st) >= 28 ? 2 : 3;
+  return k.st + years * 1000 > gd;
+}
+
+var C2_COLUMNS = [
+  { id: 'name', t: 'Name', k: 's', w: 170, v: listName },
+  { id: 'nation', t: 'Nation', k: 's', w: 120, v: c2Nations },
+  { id: 'club', t: 'Club', k: 's', w: 130, v: function (p) { var c = c2Club(p); return c ? c.s : ''; } },
+  { id: 'pos', t: 'Position', k: 's', w: 90, v: function (p) { return c2PosParts(p, false); } },
+  { id: 'ca', t: 'Ability', k: 'i', w: 58, v: function (p) { return p.ca; } },
+  { id: 'pa', t: 'Pot Ability', k: 'i', w: 70, v: function (p) { return p.pa; } },
+  { id: 'age', t: 'Age', k: 'i', w: 44, v: function (p) { return age(p); } },
+  { id: 'value', t: 'Value', k: 'm', w: 92, v: function (p) { return p.val; } },
+  { id: 'sr', t: 'Scout Rating', k: 'r', w: 104, v: bestRating },
+  { id: 'dob', t: 'Date Of Birth', k: 'd', w: 90, v: function (p) { return p.dob; } },
+  { id: 'caps', t: 'Caps', k: 'i', w: 50, v: function (p) { return p.apps; } },
+  { id: 'intGoals', t: 'Int Goals', k: 'i', w: 62, v: function (p) { return p.goals; } },
+  { id: 'eu', t: 'EU National', k: 's', w: 70, v: function (p) { return yesNo(c2IsEU(p)); } },
+  { id: 'based', t: 'Based', k: 's', w: 100, v: function (p) { var n = nation(c2Based(p)); return n ? n.s : ''; } },
+  { id: 'division', t: 'Division', k: 's', w: 130, v: function (p) { var c = c2Club(p); return c && c.div >= 0 ? DB.comps[c.div].n : ''; } },
+  { id: 'clubRep', t: 'Club Rep', k: 'i', w: 64, v: function (p) { var c = c2Club(p); return c ? c.rep : 0; } },
+  { id: 'contractEnd', t: 'Contract Exp', k: 'd', w: 90, v: function (p) { return p.club >= 0 ? p.clubExp : 0; } },
+  { id: 'contractType', t: 'Contract Type', k: 's', w: 150, v: function (p) { return p.k ? c2ContractType(p.k.t) : ''; } },
+  { id: 'wage', t: 'Wage', k: 'm', w: 80, v: function (p) { return p.wage; } },
+  { id: 'minFee', t: 'Min Fee Rel', k: 'm', w: 92, v: c2Fee('mf') },
+  { id: 'nonPlayFee', t: 'Non Play Rel', k: 'm', w: 92, v: c2Fee('npl') },
+  { id: 'nonPromoFee', t: 'Non Promotion Rel', k: 'm', w: 92, v: c2Fee('np') },
+  { id: 'relegFee', t: 'Relegation Rel', k: 'm', w: 92, v: c2Fee('rel') },
+  { id: 'managerFee', t: 'Manager Job Rel', k: 'm', w: 92, v: c2Fee('mj') },
+  { id: 'transfer', t: 'Transfer Status', k: 's', w: 150, v: function (p) { return p.k ? c2Transfer(p.k.ts) : ''; } },
+  { id: 'squadStatus', t: 'Squad Status', k: 's', w: 170, v: function (p) { return p.k ? (C2_SQUAD[c2SquadIdx(p.k.ss)] || '') : ''; } },
+  { id: 'homeRep', t: 'Home Rep', k: 'i', w: 64, v: function (p) { return p.hr; } },
+  { id: 'curRep', t: 'Current Rep', k: 'i', w: 64, v: function (p) { return p.cr; } },
+  { id: 'worldRep', t: 'World Rep', k: 'i', w: 64, v: function (p) { return p.wr; } }
+].concat(POS_COLS.map(function (k) { return { id: 'p_' + k, t: humanize(k), k: 'i', w: 52, v: function (p) { return at(p, k); }, attr: k }; }))
+ .concat(C2_ATTRS.map(function (k) { return { id: 'a_' + k, t: c2Label(k), k: 'i', w: 52, v: function (p) { return at(p, k); }, attr: k }; }));
+
+function c2Chain(f) { // TPlayerSearch.Search, same order
+  var chain = [], gd = DB.gameDate;
+  function rng(key, get) { var r = f[key] || [], lo = num(r[0]), hi = num(r[1]); if (lo !== null || hi !== null) chain.push(function (p) { return out(get(p), lo, hi); }); }
+  function sel(key) { return f[key] !== undefined && f[key] !== '' ? +f[key] : null; }
+  if (f.name && f.name.trim()) {
+    var q = fold(f.name.trim());
+    chain.push(function (p) { return !((p.c !== null && fold(p.c).indexOf(q) >= 0) || (p.f !== null && p.s !== null && fold(p.f + ' ' + p.s).indexOf(q) >= 0)); });
+  }
+  rng('age', function (p) { return age(p); });
+  if (sel('nation') !== null) { var ni = byUid(DB.nations, sel('nation')); chain.push(function (p) { return p.nat !== ni && p.nat2 !== ni; }); }
+  if (f.eu) chain.push(function (p) { return !c2IsEU(p); });
+  if (sel('based') !== null) { var bi = byUid(DB.nations, sel('based')); chain.push(function (p) { return p.club < 0 ? (p.nat !== bi && p.nat2 !== bi) : DB.clubs[p.club].nation !== bi; }); }
+  if (sel('division') !== null) { var di = byUid(DB.comps, sel('division')); chain.push(function (p) { return !(p.club >= 0 && DB.clubs[p.club].div === di); }); }
+  POS_COLS.forEach(function (k) { if (f.pos && f.pos[k]) chain.push(function (p) { return at(p, k) < 15; }); });
+  rng('ca', function (p) { return p.ca; });
+  rng('pa', function (p) { return p.pa; });
+  rng('sr', bestRating);
+  rng('homeRep', function (p) { return p.hr; });
+  rng('curRep', function (p) { return p.cr; });
+  rng('worldRep', function (p) { return p.wr; });
+  var cr = f.clubRep || [], clo = num(cr[0]), chi = num(cr[1]);
+  if (clo !== null || chi !== null) chain.push(function (p) { return p.club < 0 || out(DB.clubs[p.club].rep, clo, chi); });
+  if (sel('contract') !== null) {
+    var ct = sel('contract');
+    chain.push(function (p) {
+      switch (ct) {
+        case 0: return p.club >= 0;                                 // Free Transfer
+        case 1: return !p.k || p.k.e > gd;                          // Expired
+        case 2: return !p.k || p.k.e > gd + 1000;                   // Expiring
+        case 3: return !p.k || c2Protected(p, gd);                  // Unprotected
+      }
+      return true;
+    });
+  }
+  if (f.bosman) chain.push(function (p) { return !p.k || !p.k.b; });
+  if (f.transferArranged) chain.push(function (p) { return !p.k || p.k.arr >= 0; });
+  function clauseCheck(on, active, flag) { if (f[on]) chain.push(function (p) { return !p.k || (f[active] ? p.k[flag] !== 2 : p.k[flag] < 1); }); }
+  clauseCheck('nonPromo', 'nonPromoActive', 'np');
+  clauseCheck('releg', 'relegActive', 'rel');
+  clauseCheck('nonPlaying', 'nonPlayingActive', 'npl');
+  if (f.minFee) chain.push(function (p) { return !p.k || p.k.mf < 1; });
+  var fr = f.fee || [], flo = num(fr[0]), fhi = num(fr[1]);
+  if (flo !== null || fhi !== null) chain.push(function (p) { return !p.k || out(p.k.fee, flo, fhi); });
+  if (sel('transfer') !== null) { var ts = sel('transfer'); chain.push(function (p) { return !p.k || c2TransferIdx(p.k.ts) !== ts; }); }
+  if (sel('squadStatus') !== null) { var ss = sel('squadStatus'); chain.push(function (p) { return !p.k || c2SquadIdx(p.k.ss) !== ss; }); }
+  if (sel('contractType') !== null) { var types = C2_CONTRACT_TYPES[sel('contractType')][1]; chain.push(function (p) { return !p.k || types.indexOf(p.k.t) < 0; }); }
+  rng('value', function (p) { return p.val; });
+  var wr = f.wage || [], wlo = num(wr[0]), whi = num(wr[1]);
+  if (wlo !== null || whi !== null) chain.push(function (p) { return !p.k || out(p.k.w, wlo, whi); });
+  C2_ATTRS.forEach(function (k) {
+    var r = (f.attrs || {})[k]; if (!r) return;
+    var lo = num(r[0]), hi = num(r[1]);
+    if (lo !== null || hi !== null) chain.push(function (p) { return out(at(p, k), lo, hi); });
+  });
+  rng('caps', function (p) { return p.apps; });
+  rng('intGoals', function (p) { return p.goals; });
+  return chain;
+}
+
+function renderPlayerC2(p) { // TFfrmPlayer.ShowPlayer
+  var club = c2Club(p), k = p.k, gd = DB.gameDate, nat = nation(p.nat);
+  $('#piTitle').textContent = displayName(p) + (club ? ' (' + club.s + ')' : '');
+  var sub = 'Born ' + fmtDate(p.dob) + ' (Age ' + age(p) + '). ' + (nat ? nat.nat : '');
+  if (p.apps > 0) sub += ' (' + p.apps + (p.apps === 1 ? ' cap' : ' caps') + (p.goals > 0 ? '/' + p.goals + (p.goals === 1 ? ' goal' : ' goals') : '') + ')';
+  $('#piSub').textContent = c2PosParts(p, true) + ' · ' + sub + '.';
+  var flags = [];
+  if (p.loan && k) { var from = k.club >= 0 ? DB.clubs[k.club].s : '?'; flags.push('<span>On loan from ' + esc(from) + ' until ' + fmtDate(p.loan.e) + '</span>'); }
+  if (k && !c2Protected(p, gd)) flags.push('<span class="warn">Contract is not protected</span>');
+  if (k && k.b) flags.push('<span class="warn">Leaving on Bosman ' + fmtDate(k.e) + '</span>');
+  flags.push('<span>Best: ' + esc(c2RatingText(p)) + '</span>');
+  var lab = function (keys) { return keys.map(c2Label); };
+  var tech = ['Corners','Crossing','Dribbling','Finishing','Heading','LongShots','Marking','Movement','Passing','Penalties','FreeKicks','Tackling','Technique','ThrowIns'];
+  var mental = ['Aggression','Anticipation','Bravery','Vision','Decisions','Determination','Flair','Leadership','Positioning','Teamwork','WorkRate'];
+  var phys = ['Acceleration','Agility','Balance','Jumping','NaturalFitness','PlayerPace','Stamina','Strength'];
+  var gkk = ['Handling','OneOnOnes','Reflexes'];
+  var hidden = ['Consistency','Dirtiness','ImportantMatches','InjuryProneness','Versatility','LeftFoot','RightFoot'];
+  var persona = ['Adaptability','Ambition','Loyality','Pressure','Professionalism','Sportsmanship','Temperament'];
+  var html = '<div class="pi-flags">' + flags.join('') + '</div><div class="pi-grid">';
+  html += attrBox('Technical', p, tech, lab(tech)) + attrBox('Mental', p, mental, lab(mental)) + attrBox('Physical', p, phys, lab(phys));
+  html += attrBox('Goalkeeping', p, gkk, lab(gkk)) + attrBox('Hidden attributes', p, hidden, lab(hidden), kv('Morale', p.morale));
+  html += attrBox('Personality (hidden)', p, persona) + attrBox('Positions', p, POS_COLS);
+  html += '<div class="pi-box"><h4>Ability &amp; reputation</h4>' + kv('Current Ability', p.ca) + kv('Potential Ability', p.pa) + kv('Home Reputation', p.hr) + kv('Current Reputation', p.cr) + kv('World Reputation', p.wr) + '</div>';
+  var R = DB.rating, o = p.i * 8;
+  html += '<div class="pi-box"><h4>Scout rating</h4>' + ['Goalkeeper', 'Defender', 'Defensive Midfielder', 'Midfielder', 'Attacking Midfielder', 'Winger', 'Attacker'].map(function (n, i) {
+    return kv(n, R[o + i].toFixed(2) + ' %', DB.bestPos[p.i] === i ? 'a-hi' : '');
+  }).join('') + '</div>';
+  html += '<div class="pi-box"><h4>Transfer</h4>';
+  if (p.c !== null) html += kv('Full Name', esc(fullName(p)));
+  html += kv('Availability', k ? c2Transfer(k.ts) : 'Unknown') + kv('Value', money(p.val));
+  var n2 = nation(p.nat2); if (n2) html += kv('Second Nationality', esc(n2.nat));
+  if (k && k.arr >= 0) html += kv('Transfer Arranged', esc(DB.clubs[k.arr].s));
+  if (p.num > 0) html += kv('Squad Number', p.num);
+  html += kv('Staff ID', p.uid) + '</div>';
+  // contract
+  var cb = '<div class="pi-box pi-wide"><h4>Contract</h4>';
+  if (k) {
+    var prot = c2Protected(p, gd) ? 'Yes' : (age({ dob: p.dob }, k.st) >= 28 ? 'No (At least 2 years since start of contract)' : 'No (At least 3 years since start of contract)');
+    cb += kv('Type', c2ContractType(k.t)) + kv('Wages', money(k.w) + ' <span class="dim">per week</span>') + kv('Started', fmtDate(k.st)) + kv('Protected', prot) + kv('Expires', fmtDate(k.e));
+    if (p.loan) cb += kv('Loan Details', 'On loan from ' + esc(k.club >= 0 ? DB.clubs[k.club].s : '?') + ' until ' + fmtDate(p.loan.e));
+    cb += kv('Squad Status', esc(C2_SQUAD_LONG[c2SquadIdx(k.ss)] || ''));
+    var bon = [];
+    if (k.gb !== -1) bon.push(money(k.gb) + ' Goal Bonus');
+    if (k.ab !== -1) bon.push(money(k.ab) + ' Assist Bonus');
+    if (k.cb !== -1) bon.push(money(k.cb) + ' Clean Sheet Bonus');
+    cb += kv('Bonuses', bon.length ? bon.join('<br>') : 'None');
+    var cl = [];
+    [['np', 'Non Promotion'], ['rel', 'Relegation'], ['mf', 'Minimum Fee'], ['npl', 'Non Playing'], ['mj', 'Manager Job']].forEach(function (x) {
+      if (k[x[0]] > 0) cl.push(x[1] + ' Release Clause (' + money(k.fee) + ')' + (k[x[0]] === 2 ? ' <span class="dim">(active)</span>' : ''));
+    });
+    cb += kv('Clauses', cl.length ? cl.join('<br>') : 'None');
+    cb += kv('Future', k.b ? 'Leaving the club under the Bosman ruling on ' + fmtDate(k.e) : '-');
+  } else cb += kv('Type', '-') + kv('Wages', '-') + kv('Expires', 'N/A') + kv('Bonuses', 'None') + kv('Clauses', 'None');
+  html += cb + '</div></div>';
+  $('#piBody').innerHTML = html;
+}
+
+// Scout list (.pls) as written by ScoutList.pas. The 186-byte trailer differs in two
+// bytes when the "Interested" option is on.
+var PLS_START = [0x9E, 0x4A, 0x02, 0x00, 0x01, 0x04], PLS_MID = [0x7E, 0x68, 0x00, 0x00, 0xFA, 0x00, 0x00, 0x00];
+var PLS_END = '8100141484A8AA4410000000000000000000800000000000FFFFFFFFFF01FFFFFFFFFF0005010101010101010101010101010101010101010101010101010101010101011414141414141414141414141414141414141414141414141414141414141400000101010101010101010101011414141414141414141414140000000000000000000000000000000000000000000000000000000000000000000000008100000004000000FFFF00000000010001FFFFFFFFF2FFFFF2'; // byPlsEnd, copied from ScoutList.pas by script
+function plsBytes(list, interested) {
+  var end = PLS_END.match(/../g).map(function (h) { return parseInt(h, 16); });
+  if (end.length !== 186) throw new Error('internal: scout list trailer is ' + end.length + ' bytes');
+  if (interested) { end[5] = 0x28; end[6] = 0xAB; }
+  var size = 6 + 15 + 86 + 15 + 237 + 8 + 4 + list.length * 41 + 186, b = new Uint8Array(size), dv = new DataView(b.buffer), o = 0;
+  function bytes(a) { b.set(a, o); o += a.length; }
+  function text(s) { for (var j = 0; j < s.length; j++) b[o++] = s.charCodeAt(j); }
+  bytes(PLS_START); text('CM Scout Search'); o += 86; text('Michael Nygreen'); o += 237; bytes(PLS_MID);
+  dv.setInt32(o, list.length, true); o += 4;
+  list.forEach(function (p) {
+    dv.setInt32(o, p.fid, true); dv.setInt32(o + 4, p.sid, true); dv.setInt32(o + 8, p.cid, true); dv.setInt32(o + 12, p.uid, true);
+    dv.setUint16(o + 16, p.dobRaw[0], true); dv.setUint16(o + 18, p.dobRaw[1], true); dv.setInt32(o + 20, p.dobRaw[2], true);
+    b[o + 40] = 0xFF; o += 41;
+  });
+  bytes(end);
+  return b;
+}
+
+// ======================================================================
+// Game definition: columns, filters, player view and export
+// ======================================================================
+function indexCols(cols) { var m = {}; cols.forEach(function (c) { m[c.id] = c; }); return m; }
+var GAME = {
+  name: 'CM 01/02', columns: C2_COLUMNS, byId: indexCols(C2_COLUMNS), defaultVisible: ['name', 'nation', 'club', 'pos', 'ca', 'pa', 'age', 'value', 'sr'],
+  attrs: C2_ATTRS, hidden: C2_HIDDEN, inverse: ['Dirtiness', 'InjuryProneness'], label: c2Label,
+  chain: c2Chain, ratingText: c2RatingText, renderPlayer: renderPlayerC2,
+  transferOptions: ['Transfer Listed By Club', 'Transfer Listed By Request', 'Listed For Loan'],
+  squadOptions: C2_SQUAD, contractTypeOptions: C2_CONTRACT_TYPES.map(function (x) { return x[0]; }),
+  exportLabel: 'Export scout list', exportTitle: 'Export the current list as a .pls scout list for the game\'s Search folder',
+  exportList: function (list, title) {
+    download(plsBytes(list, settings.interested), title + '.pls', 'application/octet-stream');
+    status('Exported ' + list.length + ' players. Put the .pls in the game\'s "Search" folder to load it in game.');
+  }
+};
+function visibleColumns() { var vis = gs().columns.visible; return gs().columns.order.filter(function (id) { return vis.indexOf(id) >= 0; }).map(colById); }
+function colWidth(c) { return gs().columns.widths[c.id] || c.w; }
+function cellText(c, p) {
+  var v = c.v(p);
+  switch (c.k) {
+    case 'm': return thousands(v);
+    case 'd': return v ? fmtDate(v) : '';
+    case 'r': return P().ratingText(p);
+    default: return '' + v;
+  }
+}
+
+// ======================================================================
+// Filters (port of CMFilter.pas, same order). Empty bound = unbounded.
+// ======================================================================
+var RANGES = ['age', 'caps', 'intGoals', 'ca', 'pa', 'sr', 'homeRep', 'curRep', 'worldRep', 'clubRep', 'fee', 'value', 'wage'];
+function num(x) { return x === '' || x === null || x === undefined || isNaN(+x) ? null : +x; }
+function out(v, lo, hi) { return (lo !== null && v < lo) || (hi !== null && v > hi); }
+function fold(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+function byUid(arr, uid) { for (var j = 0; j < arr.length; j++) if (arr[j].uid === uid) return j; return -2; }
+function runSearch() {
+  if (!DB) return;
+  var f = readFilters(), chain = P().chain(f), list = [], PL = DB.players;
+  outer: for (var j = 0; j < PL.length; j++) {
+    for (var k = 0; k < chain.length; k++) if (chain[k](PL[j])) continue outer;
+    list.push(PL[j]);
+  }
+  setView(list, 'search', 'Search results');
+}
+function countActive(f) {
+  var n = 0;
+  if (f.name && f.name.trim()) n++;
+  ['nation', 'based', 'division', 'contract', 'transfer', 'squadStatus', 'contractType'].forEach(function (k) { if (f[k] !== undefined && f[k] !== '') n++; });
+  ['eu', 'bosman', 'nonPromo', 'releg', 'minFee', 'transferArranged', 'nonPlaying'].forEach(function (k) { if (f[k]) n++; });
+  RANGES.forEach(function (k) { if (f[k] && (num(f[k][0]) !== null || num(f[k][1]) !== null)) n++; });
+  Object.keys(f.pos || {}).forEach(function (k) { if (f.pos[k]) n++; });
+  Object.keys(f.attrs || {}).forEach(function (k) { var r = f.attrs[k]; if (num(r[0]) !== null || num(r[1]) !== null) n++; });
+  return n;
+}
+
+// ---------- filter form ----------
+function buildFilterForm() {
+  $$('.range[data-range]').forEach(function (el) {
+    var k = el.dataset.range, max = el.dataset.max || '';
+    el.innerHTML = '<input type="number" min="0" ' + (max ? 'max="' + max + '"' : '') + ' data-rmin="' + k + '" placeholder="min" aria-label="' + k + ' min"><span>–</span><input type="number" min="0" ' + (max ? 'max="' + max + '"' : '') + ' data-rmax="' + k + '" placeholder="max" aria-label="' + k + ' max">';
+  });
+  $('#posChecks').innerHTML = POS_COLS.map(function (k) { return '<label><input type="checkbox" data-pos="' + k + '"> ' + humanize(k) + '</label>'; }).join('');
+}
+function buildAttrGrid() {
+  var pr = P(), sorted = pr.attrs.slice().sort(function (a, b) { return pr.label(a).localeCompare(pr.label(b)); });
+  $('#attrGrid').innerHTML = '<span class="h">Attribute</span><span class="h">Min</span><span class="h">Max</span>' + sorted.map(function (k) {
+    var hid = pr.hidden.indexOf(k) >= 0 ? ' hidden-attr' : '', l = esc(pr.label(k));
+    return '<label class="arow' + hid + '" data-arow="' + k + '" for="am_' + k + '">' + l + '</label><input type="number" min="1" max="20" id="am_' + k + '" data-amin="' + k + '" data-arow="' + k + '"><input type="number" min="1" max="20" data-amax="' + k + '" data-arow="' + k + '" aria-label="' + l + ' max">';
+  }).join('');
+}
+function setOptions(sel, labels) {
+  $(sel).innerHTML = '<option value="">Any</option>' + labels.map(function (l, i) { return '<option value="' + i + '">' + esc(l) + '</option>'; }).join('');
+}
+function applyGameUI() {
+  var pr = P();
+  setOptions('#f_transfer', pr.transferOptions);
+  setOptions('#f_squadStatus', pr.squadOptions);
+  setOptions('#f_contractType', pr.contractTypeOptions);
+  buildAttrGrid();
+  $('#btnSaveSl').textContent = pr.exportLabel; $('#btnSaveSl').title = pr.exportTitle;
+  writeFilters(gs().filters || {});
+  refreshPresets();
+  updateStarCount();
+}
+function fillLookups() {
+  var nOpts = '<option value="">Any</option>' + DB.nations.map(function (n, i) { return [n.s || n.n || ('#' + i), n.uid]; })
+    .sort(function (a, b) { return a[0].localeCompare(b[0]); }).map(function (x) { return '<option value="' + x[1] + '">' + esc(x[0]) + '</option>'; }).join('');
+  $('#f_nation').innerHTML = nOpts; $('#f_based').innerHTML = nOpts;
+  $('#f_division').innerHTML = '<option value="">Any</option>' + DB.comps.map(function (c) { return [c.n, c.uid]; }).filter(function (x) { return x[0]; })
+    .sort(function (a, b) { return a[0].localeCompare(b[0]); }).map(function (x) { return '<option value="' + x[1] + '">' + esc(x[0]) + '</option>'; }).join('');
+  writeFilters(gs().filters || {});
+}
+function readFilters() {
+  var f = { pos: {}, attrs: {} };
+  $$('[data-f]').forEach(function (el) {
+    var k = el.dataset.f;
+    f[k] = el.type === 'checkbox' ? el.checked : el.value;
+    if (el.tagName === 'SELECT' && el.options.length <= 1 && gs().filters && gs().filters[k] !== undefined) f[k] = gs().filters[k];
+  });
+  RANGES.forEach(function (k) { f[k] = [$('[data-rmin="' + k + '"]').value, $('[data-rmax="' + k + '"]').value]; });
+  $$('[data-pos]').forEach(function (el) { if (el.checked) f.pos[el.dataset.pos] = true; });
+  P().attrs.forEach(function (k) { var a = $('[data-amin="' + k + '"]').value, b = $('[data-amax="' + k + '"]').value; if (a !== '' || b !== '') f.attrs[k] = [a, b]; });
+  return f;
+}
+function writeFilters(f) {
+  $$('[data-f]').forEach(function (el) {
+    var v = f[el.dataset.f];
+    if (el.type === 'checkbox') el.checked = !!v;
+    else { el.value = v === undefined ? '' : v; if (el.tagName === 'SELECT' && el.value !== String(v === undefined ? '' : v)) el.value = ''; }
+  });
+  RANGES.forEach(function (k) { var r = f[k] || ['', '']; $('[data-rmin="' + k + '"]').value = r[0]; $('[data-rmax="' + k + '"]').value = r[1]; });
+  $$('[data-pos]').forEach(function (el) { el.checked = !!(f.pos && f.pos[el.dataset.pos]); });
+  P().attrs.forEach(function (k) { var r = (f.attrs || {})[k] || ['', '']; $('[data-amin="' + k + '"]').value = r[0]; $('[data-amax="' + k + '"]').value = r[1]; });
+  filtersChanged();
+}
+function filtersChanged() {
+  var f = readFilters();
+  gs().filters = f; saveSettings();
+  var n = countActive(f);
+  $('#activeFilters').textContent = n ? n + ' filter' + (n > 1 ? 's' : '') + ' set' : 'No filters set — Search lists every player';
+  applyAttrFind();
+}
+function applyAttrFind() {
+  var q = fold($('#attrFind').value), setOnly = $('#attrSetOnly').checked;
+  P().attrs.forEach(function (k) {
+    var set = $('[data-amin="' + k + '"]').value !== '' || $('[data-amax="' + k + '"]').value !== '';
+    var show = (!q || fold(P().label(k)).indexOf(q) >= 0) && (!setOnly || set);
+    $$('[data-arow="' + k + '"]').forEach(function (el) { el.classList.toggle('hiddenrow', !show); });
+  });
+}
+function refreshPresets(sel) {
+  var names = Object.keys(gs().presets).sort();
+  $('#presetSel').innerHTML = '<option value="">Saved searches…</option>' + names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('');
+  $('#presetSel').value = sel || '';
+  $('#btnPresetDel').disabled = !$('#presetSel').value;
+}
+
+// ======================================================================
+// Results grid (virtualised)
+// ======================================================================
+var ROW_H = 26, grid = $('#grid'), inner = $('#gridInner'), sortKeys = null;
+function setView(list, mode, title) {
+  view.list = list; view.mode = mode; view.title = title; view.sel = -1;
+  applySort();
+  grid.scrollTop = 0;
+  renderAll();
+}
+function applySort() {
+  var s = gs().sort, c = colById(s.col);
+  if (!c || !view.list.length) return;
+  var L = view.list, n = L.length, keys = new Array(n), idx = new Array(n), j;
+  for (j = 0; j < n; j++) { keys[j] = c.v(L[j]); idx[j] = j; }
+  var coll = new Intl.Collator(undefined, { sensitivity: 'base' });
+  // As in the original: strings and dates ascend on first click, numbers descend.
+  var natural = c.k === 's' || c.k === 'd' ? 1 : -1, dir = natural * s.dir;
+  var cmp = c.k === 's' ? function (a, b) { return coll.compare(keys[a], keys[b]) * dir || a - b; }
+                        : function (a, b) { return (keys[a] < keys[b] ? -1 : keys[a] > keys[b] ? 1 : 0) * dir || a - b; };
+  idx.sort(cmp);
+  view.list = idx.map(function (i) { return L[i]; });
+}
+function renderAll() {
+  var cols = visibleColumns(), total = 28 + cols.reduce(function (s, c) { return s + colWidth(c); }, 0);
+  inner.style.width = total + 'px';
+  inner.style.height = (ROW_H + view.list.length * ROW_H) + 'px';
+  var s = gs().sort;
+  var head = '<div class="ghead" style="width:' + total + 'px"><div class="gcell star" title="Starred">★</div>' + cols.map(function (c) {
+    var sorted = s.col === c.id, nat = c.k === 's' || c.k === 'd' ? 1 : -1, arrow = sorted ? (nat * s.dir > 0 ? '▲' : '▼') : '';
+    return '<div class="gcell' + (c.k !== 's' ? ' num' : '') + (sorted ? ' sorted' : '') + '" draggable="true" data-col="' + c.id + '" data-dir="' + arrow + '" style="width:' + colWidth(c) + 'px" title="' + esc(c.t) + '">' + esc(c.t) + '<span class="rz" data-rz="' + c.id + '"></span></div>';
+  }).join('') + '</div>';
+  inner.innerHTML = head + '<div id="rows"></div>';
+  lastRange = '';
+  renderRows();
+  $('#emptyMsg').style.display = DB ? 'none' : '';
+  var n = view.list.length;
+  $('#resultsTitle').textContent = view.title;
+  $('#resultsCount').textContent = view.mode === 'none' ? (DB ? 'Press Search to list players (' + thousands(DB.players.length) + ' in game)' : '') : thousands(n) + ' player' + (n === 1 ? '' : 's') + ' found';
+  $('#btnSaveSl').disabled = !n; $('#btnCsv').disabled = !n;
+}
+var lastRange = '';
+function renderRows(force) {
+  var rows = $('#rows'); if (!rows) return;
+  var top = grid.scrollTop, h = grid.clientHeight, first = Math.max(0, Math.floor(top / ROW_H) - 5), last = Math.min(view.list.length, Math.ceil((top + h) / ROW_H) + 5);
+  var key = first + ':' + last;
+  if (key === lastRange && !force) { markSel(); return; }
+  lastRange = key;
+  var cols = visibleColumns(), html = [];
+  for (var j = first; j < last; j++) {
+    var p = view.list[j], st = gs().stars[p.uid];
+    html.push('<div class="grow-row' + (j % 2 ? ' alt' : '') + (j === view.sel ? ' sel' : '') + '" data-row="' + j + '" style="top:' + (ROW_H + j * ROW_H) + 'px"><div class="gcell star' + (st ? ' on' : '') + '" data-star="' + j + '">' + (st ? '★' : '☆') + '</div>');
+    for (var k = 0; k < cols.length; k++) {
+      var c = cols[k];
+      html.push('<div class="gcell' + (c.k !== 's' ? ' num' : '') + '" style="width:' + colWidth(c) + 'px">' + esc(cellText(c, p)) + '</div>');
+    }
+    html.push('</div>');
+  }
+  rows.innerHTML = html.join('');
+}
+// Selection changes only toggle a class, so a double-click lands on the same element twice.
+function markSel() {
+  $$('#rows .grow-row.sel').forEach(function (el) { if (+el.dataset.row !== view.sel) el.classList.toggle('sel', false); });
+  var el = $('#rows [data-row="' + view.sel + '"]'); if (el) el.classList.add('sel');
+}
+grid.addEventListener('scroll', function () { requestAnimationFrame(function () { renderRows(); }); });
+window.addEventListener('resize', function () { renderRows(true); });
+
+function selectRow(j, scroll) {
+  if (!view.list.length) return;
+  view.sel = Math.max(0, Math.min(view.list.length - 1, j));
+  if (scroll) {
+    var y = ROW_H + view.sel * ROW_H;
+    if (y < grid.scrollTop + ROW_H) grid.scrollTop = y - ROW_H;
+    else if (y + ROW_H > grid.scrollTop + grid.clientHeight) grid.scrollTop = y + ROW_H - grid.clientHeight;
+  }
+  renderRows();
+}
+grid.addEventListener('click', function (e) {
+  var st = e.target.closest('[data-star]');
+  if (st) { toggleStar(view.list[+st.dataset.star]); return; }
+  var row = e.target.closest('[data-row]');
+  if (row) { selectRow(+row.dataset.row); return; }
+  var h = e.target.closest('.ghead [data-col]');
+  if (h && !e.target.closest('[data-rz]') && !resizing) {
+    var id = h.dataset.col;
+    if (gs().sort.col === id) gs().sort.dir = -gs().sort.dir; else gs().sort = { col: id, dir: 1 };
+    saveSettings(); applySort(); renderAll();
+  }
+});
+grid.addEventListener('dblclick', function (e) { var row = e.target.closest('[data-row]'); if (row && !e.target.closest('[data-star]')) openPlayer(+row.dataset.row); });
+grid.addEventListener('keydown', function (e) {
+  if (!view.list.length) return;
+  var page = Math.max(1, Math.floor(grid.clientHeight / ROW_H) - 2);
+  var map = { ArrowDown: 1, ArrowUp: -1, PageDown: page, PageUp: -page };
+  if (map[e.key]) { e.preventDefault(); selectRow((view.sel < 0 ? 0 : view.sel + map[e.key]), true); }
+  else if (e.key === 'Home') { e.preventDefault(); selectRow(0, true); }
+  else if (e.key === 'End') { e.preventDefault(); selectRow(view.list.length - 1, true); }
+  else if (e.key === 'Enter' && view.sel >= 0) { e.preventDefault(); openPlayer(view.sel); }
+  else if (e.key === ' ' && view.sel >= 0) { e.preventDefault(); toggleStar(view.list[view.sel]); }
+});
+// column resize
+var resizing = null;
+grid.addEventListener('mousedown', function (e) {
+  var rz = e.target.closest('[data-rz]'); if (!rz) return;
+  e.preventDefault(); e.stopPropagation();
+  var c = colById(rz.dataset.rz), x0 = e.clientX, w0 = colWidth(c);
+  resizing = c;
+  function mv(ev) { gs().columns.widths[c.id] = Math.max(30, w0 + ev.clientX - x0); renderAll(); }
+  function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); saveSettings(); setTimeout(function () { resizing = null; }, 0); }
+  document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+});
+// column drag-reorder
+var dragCol = null;
+grid.addEventListener('dragstart', function (e) { var h = e.target.closest('.ghead [data-col]'); if (!h || resizing) { e.preventDefault(); return; } dragCol = h.dataset.col; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragCol); });
+grid.addEventListener('dragover', function (e) { var h = e.target.closest('.ghead [data-col]'); if (!h || !dragCol) return; e.preventDefault(); $$('.ghead .dragover').forEach(function (x) { x.classList.remove('dragover'); }); h.classList.add('dragover'); });
+grid.addEventListener('drop', function (e) {
+  var h = e.target.closest('.ghead [data-col]'); if (!h || !dragCol) return; e.preventDefault();
+  var o = gs().columns.order, from = o.indexOf(dragCol); o.splice(from, 1); o.splice(o.indexOf(h.dataset.col), 0, dragCol);
+  dragCol = null; saveSettings(); renderAll();
+});
+grid.addEventListener('dragend', function () { dragCol = null; $$('.ghead .dragover').forEach(function (x) { x.classList.remove('dragover'); }); });
+
+// quick jump (incremental search on list name, like the original)
+$('#quick').addEventListener('input', function () {
+  var q = fold(this.value); if (!q || !view.list.length) return;
+  for (var j = 0; j < view.list.length; j++) if (fold(listName(view.list[j])).indexOf(q) === 0) { selectRow(j, true); return; }
+});
+$('#quick').addEventListener('keydown', function (e) { if (e.key === 'Enter' && view.sel >= 0) openPlayer(view.sel); });
+
+// ---------- stars (personal shortlist kept in localStorage) ----------
+function toggleStar(p) {
+  if (gs().stars[p.uid]) delete gs().stars[p.uid]; else gs().stars[p.uid] = 1;
+  saveSettings(); updateStarCount(); renderRows(true);
+  if (dlgPlayer.open && piList[piIdx] === p) $('#piStar').textContent = gs().stars[p.uid] ? '★' : '☆';
+}
+function updateStarCount() { $('#starCount').textContent = Object.keys(gs().stars).length; }
+$('#btnStarred').addEventListener('click', function () {
+  var idx = getUidIndex(), list = [];
+  Object.keys(gs().stars).forEach(function (u) { var i = idx.get(+u); if (i !== undefined) list.push(DB.players[i]); });
+  setView(list, 'starred', 'Starred players');
+});
+function getUidIndex() { if (!uidIndex) { uidIndex = new Map(); DB.players.forEach(function (p, i) { uidIndex.set(p.uid, i); }); } return uidIndex; }
+
+// ======================================================================
+// Player info dialog
+// ======================================================================
+var dlgPlayer = $('#dlgPlayer'), piList = [], piIdx = 0;
+function openPlayer(j) { piList = view.list; piIdx = j; selectRow(j, true); renderPlayer(); if (!dlgPlayer.open) dlgPlayer.showModal(); }
+function kv(k, v, cls) { return '<div class="kv"><span>' + esc(k) + '</span><b' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</b></div>'; }
+function attrBox(title, p, keys, labels, extra) {
+  return '<div class="pi-box"><h4>' + title + '</h4>' + keys.map(function (k, i) {
+    var v = at(p, k), inv = P().inverse.indexOf(k) >= 0, hi = inv ? v <= 5 : v >= 15, lo = inv ? v >= 15 : v <= 5;
+    return kv(labels && labels[i] || humanize(k), v, hi ? 'a-hi' : lo ? 'a-lo' : '');
+  }).join('') + (extra || '') + '</div>';
+}
+function renderPlayer() {
+  var p = piList[piIdx]; if (!p) return;
+  P().renderPlayer(p);
+  $('#piStar').textContent = gs().stars[p.uid] ? '★' : '☆';
+  $('#piPrev').disabled = piIdx <= 0; $('#piNext').disabled = piIdx >= piList.length - 1;
+}
+$('#piPrev').addEventListener('click', function () { if (piIdx > 0) { piIdx--; selectRow(piIdx, true); renderPlayer(); } });
+$('#piNext').addEventListener('click', function () { if (piIdx < piList.length - 1) { piIdx++; selectRow(piIdx, true); renderPlayer(); } });
+$('#piStar').addEventListener('click', function () { toggleStar(piList[piIdx]); });
+dlgPlayer.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('#piPrev').click(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); $('#piNext').click(); }
+});
+$$('[data-close]').forEach(function (b) { b.addEventListener('click', function () { b.closest('dialog').close(); }); });
+dlgPlayer.addEventListener('close', function () { grid.focus(); });
+
+// ======================================================================
+// Team search
+// ======================================================================
+var dlgTeam = $('#dlgTeam'), clubOptions = [];
+$('#btnTeam').addEventListener('click', function () {
+  clubOptions = DB.clubs.map(function (c, i) { return { i: i, n: c.n || c.s || ('Club #' + i) }; })
+    .filter(function (x) { var c = DB.clubs[x.i]; return c.teams.length > 0 && !c.lb; })
+    .sort(function (a, b) { return a.n.localeCompare(b.n); });
+  $('#clubFind').value = '';
+  fillClubs();
+  dlgTeam.returnValue = '';
+  dlgTeam.showModal();
+  $('#clubFind').focus();
+});
+function fillClubs() {
+  var q = fold($('#clubFind').value), html = [];
+  for (var j = 0; j < clubOptions.length && html.length < 3000; j++) if (!q || fold(clubOptions[j].n).indexOf(q) >= 0) html.push('<option value="' + clubOptions[j].i + '">' + esc(clubOptions[j].n) + '</option>');
+  $('#clubList').innerHTML = html.join('');
+  if (html.length === 1) $('#clubList').selectedIndex = 0;
+  fillSquads();
+}
+function fillSquads() {
+  var ci = $('#clubList').value;
+  $('#teamOk').disabled = ci === '';
+  if (ci === '') { $('#squadSel').innerHTML = ''; return; }
+  var c = DB.clubs[+ci];
+  $('#squadSel').innerHTML = '<option value="">All Squads</option>' + c.teams.map(function (t) { return '<option value="' + t + '">' + esc(squadNameOf(DB.teams[t])) + '</option>'; }).join('');
+}
+$('#clubFind').addEventListener('input', fillClubs);
+$('#clubFind').addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowDown') { e.preventDefault(); $('#clubList').focus(); if ($('#clubList').selectedIndex < 0) $('#clubList').selectedIndex = 0; fillSquads(); }
+  if (e.key === 'Enter') { e.preventDefault(); if ($('#clubList').value !== '') { dlgTeam.returnValue = 'ok'; dlgTeam.close('ok'); } }
+});
+$('#clubList').addEventListener('change', fillSquads);
+$('#clubList').addEventListener('dblclick', function () { if ($('#clubList').value !== '') dlgTeam.close('ok'); });
+dlgTeam.addEventListener('close', function () {
+  if (dlgTeam.returnValue !== 'ok' || $('#clubList').value === '') return;
+  var c = DB.clubs[+$('#clubList').value], sq = $('#squadSel').value, list = [];
+  var teams = sq === '' ? c.teams : [+sq];
+  teams.forEach(function (t) { DB.teams[t].pl.forEach(function (pi) { list.push(DB.players[pi]); }); });
+  setView(list, 'team', (sq === '' ? (c.n || c.s) : squadNameOf(DB.teams[+sq])) + ' — squad');
+  if (G() === 'cm0102') status(c.s + ', Reputation: ' + c.rep);
+});
+
+// ======================================================================
+// Exports (.pls scout list, CSV)
+// ======================================================================
+function listFileName() { return view.title.replace(/[^\w\- ]+/g, '').trim() || 'players'; }
+function download(data, name, type) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: type }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+}
+$('#btnSaveSl').addEventListener('click', function () { P().exportList(view.list, listFileName()); });
+// CSV of the visible columns, semicolon-separated like the original TCSVWriter
+$('#btnCsv').addEventListener('click', function () {
+  var cols = visibleColumns(), q = function (x) { x = String(x); return /[;"\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+  var lines = [cols.map(function (c) { return q(c.t); }).join(';')].concat(view.list.map(function (p) { return cols.map(function (c) { return q(cellText(c, p)); }).join(';'); }));
+  download('\ufeff' + lines.join('\r\n') + '\r\n', listFileName() + '.csv', 'text/csv;charset=utf-8');
+  status('Exported ' + view.list.length + ' players to CSV');
+});
+
+// ======================================================================
+// Loading (worker)
+// ======================================================================
+var workerUrl = null;
+function runParser(buf) {
+  return new Promise(function (resolve, reject) {
+    var w;
+    try {
+      if (!workerUrl) {
+        var src = $('#parser-src').textContent + '\nself.onmessage=function(e){var d=e.data;try{var rep=function(s,p){self.postMessage({type:"status",s:s,p:p});};' +
+          'var res=CMParser.parseSave(d.buf,rep);' +
+          'self.postMessage({type:"done",res:res},[res.attr.buffer,res.rating.buffer,res.bestPos.buffer]);}' +
+          'catch(err){self.postMessage({type:"error",message:err.message||String(err)});}};';
+        workerUrl = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+      }
+      w = new Worker(workerUrl);
+    } catch (e) { w = null; }
+    if (!w) { // main-thread fallback
+      setTimeout(function () {
+        try { resolve(CMParser.parseSave(buf, progress)); }
+        catch (e) { reject(e); }
+      }, 30);
+      return;
+    }
+    w.onmessage = function (e) {
+      var d = e.data;
+      if (d.type === 'status') progress(d.s, d.p);
+      else if (d.type === 'done') { w.terminate(); resolve(d.res); }
+      else { w.terminate(); reject(new Error(d.message)); }
+    };
+    w.onerror = function (e) { w.terminate(); reject(new Error(e.message || 'Worker failed')); };
+    w.postMessage({ buf: buf }, [buf]);
+  });
+}
+function progress(s, p) {
+  $('#status').textContent = s;
+  var bar = $('#progress'); bar.style.display = p < 1 ? 'block' : 'none';
+  bar.firstElementChild.style.width = Math.round((p || 0) * 100) + '%';
+}
+function status(s) { $('#status').textContent = s; $('#progress').style.display = 'none'; }
+function busy(on) { ['#btnSearch', '#btnTeam', '#btnStarred', '#fileSave'].forEach(function (s) { $(s).disabled = on || (!DB && s !== '#fileSave'); }); }
+
+$('#fileSave').addEventListener('change', function () {
+  var f = this.files[0]; this.value = ''; if (!f) return;
+  busy(true);
+  var t0 = performance.now();
+  progress('Reading ' + f.name, 0);
+  f.arrayBuffer().then(function (buf) { return runParser(buf); }).then(function (res) {
+    res.fileName = f.name; res.fileSize = f.size; res.loadedAt = Date.now();
+    installDB(res);
+    status('Loaded ' + thousands(res.players.length) + ' players from ' + f.name + ' in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s');
+    if (settings.cacheGame) cacheGame();
+  }).catch(function (e) { status('Load failed'); showError(e, 'Couldn\'t load saved game'); }).then(function () { busy(false); });
+});
+
+function installDB(res) {
+  DB = res;
+  uidIndex = null;
+  DB.ki = {}; DB.attrKeys.forEach(function (k, i) { DB.ki[k] = i; });
+  applyGameUI();
+  fillLookups();
+  var ver = 'CM 01/02' + (DB.compressed ? ' (compressed)' : '');
+  $('#gameInfo').innerHTML = '<b>' + esc(DB.fileName.replace(/\.[^.]+$/, '')) + '</b><br>' + fmtDate(DB.gameDate) + ' · ' + ver + ' · ' + thousands(DB.players.length) + ' players';
+  ['#btnTeam', '#btnSearch', '#btnStarred'].forEach(function (s) { $(s).disabled = false; });
+  updateStarCount();
+  setView([], 'none', 'Players');
+}
+
+
+// ---------- cache ----------
+function cacheGame() {
+  var copy = Object.assign({}, DB); delete copy.ki;
+  return idb.set('game', copy).then(function () { $('#cacheInfo').textContent = 'Game cached in this browser'; })
+    .catch(function (e) { $('#cacheInfo').textContent = 'Could not cache game (' + (e && e.name || 'storage error') + ')'; });
+}
+
+// ======================================================================
+// Dialogs: columns, settings, errors
+// ======================================================================
+$('#btnColumns').addEventListener('click', function () {
+  var vis = gs().columns.visible;
+  $('#colList').innerHTML = gs().columns.order.map(function (id) {
+    var c = colById(id);
+    return '<label><input type="checkbox" data-colvis="' + id + '"' + (vis.indexOf(id) >= 0 ? ' checked' : '') + (id === 'name' ? ' disabled' : '') + '> ' + esc(c.t) + '</label>';
+  }).join('');
+  $('#dlgColumns').returnValue = '';
+  $('#dlgColumns').showModal();
+});
+$('#colList').addEventListener('change', function (e) {
+  var id = e.target.dataset.colvis; if (!id) return;
+  var v = gs().columns.visible, i = v.indexOf(id);
+  if (e.target.checked && i < 0) v.push(id); else if (!e.target.checked && i >= 0) v.splice(i, 1);
+  saveSettings(); renderAll();
+});
+$('#dlgColumns').addEventListener('close', function () {
+  if ($('#dlgColumns').returnValue === 'default') { gs().columns = defaultColumns(); saveSettings(); renderAll(); }
+});
+
+$('#btnSettings').addEventListener('click', function () {
+  $('#cacheGame').checked = settings.cacheGame;
+  $('#themeSel').value = settings.theme || '';
+  $('#plsInterested').checked = !!settings.interested;
+  updateStorageInfo();
+  $('#dlgSettings').showModal();
+});
+function updateStorageInfo() {
+  var lsBytes = 0; try { lsBytes = (localStorage.getItem(LS_KEY) || '').length * 2; } catch (e) { /* ignore */ }
+  var txt = 'Settings, filters, saved searches and stars: ' + (lsBytes / 1024).toFixed(1) + ' KB in localStorage.';
+  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function (est) {
+    $('#storageInfo').textContent = txt + ' Cached game: ~' + (est.usage / 1048576).toFixed(1) + ' MB in IndexedDB.';
+  }); else $('#storageInfo').textContent = txt;
+}
+$('#cacheGame').addEventListener('change', function () {
+  settings.cacheGame = this.checked; saveSettings();
+  if (!this.checked) { idb.del('game').catch(function () {}); $('#cacheInfo').textContent = ''; } else if (DB) cacheGame();
+  setTimeout(updateStorageInfo, 300);
+});
+$('#forgetGame').addEventListener('click', function () { idb.del('game').then(function () { $('#cacheInfo').textContent = 'Cached game removed'; updateStorageInfo(); }).catch(showError); });
+$('#clearStars').addEventListener('click', function () { if (confirm('Remove all starred players?')) { gs().stars = {}; saveSettings(); updateStarCount(); renderRows(true); } });
+$('#resetAll').addEventListener('click', function () {
+  if (!confirm('Reset columns, filters, saved searches, stars and settings?')) return;
+  var last = G(); settings = defaultSettings(); settings.lastGame = last; saveSettings();
+  applyGameUI(); applyTheme(); renderAll();
+});
+$('#plsInterested').addEventListener('change', function () { settings.interested = this.checked; saveSettings(); });
+$('#themeSel').addEventListener('change', function () { settings.theme = this.value; saveSettings(); applyTheme(); });
+function applyTheme() { if (settings.theme) document.documentElement.setAttribute('data-theme', settings.theme); else document.documentElement.removeAttribute('data-theme'); }
+
+function showError(e, title) {
+  console.error(e);
+  $('#errTitle').textContent = title || 'Error';
+  $('#errText').textContent = (e && e.message) || String(e);
+  if (!$('#dlgError').open) $('#dlgError').showModal();
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+// ======================================================================
+// Wiring
+// ======================================================================
+$$('.tabs button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    $$('.tabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    $$('.tabpane').forEach(function (p) { p.classList.toggle('on', p.id === b.dataset.tab); });
+  });
+});
+$('#filterForm').addEventListener('input', function (e) { if (e.target.id !== 'attrFind') filtersChanged(); });
+$('#filterForm').addEventListener('change', function (e) { if (e.target.id !== 'attrFind' && e.target.id !== 'attrSetOnly') filtersChanged(); });
+$('#filterForm').addEventListener('submit', function (e) { e.preventDefault(); });
+$('#filters').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.id !== 'attrFind' && !e.target.closest('.aside-foot')) { e.preventDefault(); $('#btnSearch').click(); }
+});
+$('#attrFind').addEventListener('input', applyAttrFind);
+$('#attrSetOnly').addEventListener('change', applyAttrFind);
+$('#btnSearch').addEventListener('click', function () {
+  var t0 = performance.now(); runSearch();
+  status('Search took ' + Math.round(performance.now() - t0) + ' ms');
+});
+$('#btnReset').addEventListener('click', function () { writeFilters({}); refreshPresets(); });
+$('#btnToggleFilters').addEventListener('click', function () { settings.panel = !settings.panel; saveSettings(); $('#filters').classList.toggle('hidden', !settings.panel); renderRows(true); });
+$('#presetSel').addEventListener('change', function () {
+  var n = this.value; $('#btnPresetDel').disabled = !n;
+  if (n && gs().presets[n]) writeFilters(JSON.parse(JSON.stringify(gs().presets[n])));
+});
+$('#btnPresetSave').addEventListener('click', function () {
+  var n = prompt('Name for this search:', $('#presetSel').value || '');
+  if (!n) return;
+  gs().presets[n] = readFilters(); saveSettings(); refreshPresets(n);
+});
+$('#btnPresetDel').addEventListener('click', function () {
+  var n = $('#presetSel').value; if (!n || !confirm('Delete saved search "' + n + '"?')) return;
+  delete gs().presets[n]; saveSettings(); refreshPresets();
+});
+document.addEventListener('keydown', function (e) {
+  if (e.target.closest('input, select, textarea, dialog')) return;
+  if (e.key === '/' ) { e.preventDefault(); $('#quick').focus(); }
+});
+
+// ---------- boot ----------
+applyTheme();
+buildFilterForm();
+applyGameUI();
+$('#filters').classList.toggle('hidden', !settings.panel);
+updateStarCount();
+renderAll();
+busy(false);
+
+Promise.resolve().then(function () {
+  if (!settings.cacheGame) return;
+  progress('Restoring last game…', 0.5);
+  return idb.get('game').then(function (g) {
+    if (!g || g.game !== 'cm0102') { status('Ready'); return; }
+    installDB(g);
+    $('#cacheInfo').textContent = 'Restored from browser cache — load the save again to refresh';
+    status('Restored ' + g.fileName + ' (' + thousands(g.players.length) + ' players)');
+  });
+}).catch(function (e) { status('Ready'); console.warn('cache restore failed', e); });
+
+// test hook
+window.CMScout = { get db() { return DB; }, get view() { return view; }, runSearch: runSearch, settings: function () { return settings; } };
+})();
+</script>
+</body>
+</html>
